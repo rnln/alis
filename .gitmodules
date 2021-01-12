@@ -1,0 +1,3 @@
+[submodule "rcs"]
+	path = rcs
+	url = git@gitlab.com:romanilin/rcs.git
