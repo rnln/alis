@@ -1,7 +1,7 @@
 # Arch Linux install scripts
 
 ```
-sh -c "$(curl -fsSL https://v.gd/alise)"
+sh -c "$(curl -fsSL https://v.gd/alisa)"
 ```
 
 ## License
