@@ -108,7 +108,7 @@ setup_color_scheme () {
     BACKGROUND=$BLACK
     FOREGROUND=$WHITE
 
-    PALLETE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
+    PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
 }
 
 
@@ -253,7 +253,6 @@ install_base () {
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'boot loader installation and configuring'
 
-    # partitions unmounting
     log 'partitions unmounting'
     umount -R /mnt
     log -f 'partitions unmounting'
@@ -280,21 +279,21 @@ install_post () {
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'grub configuring'
 
-    log 'mirrors configuring'
+    log 'pacman configuring'
     sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
     sudo sh -c 'reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist'
-    log -f 'mirrors configuring'
+    log -f 'pacman configuring'
 
-    # log 'yay installation'
-    # install_packages base-devel git
-    # tempdir="$(mktemp -d)"
-    # git clone https://aur.archlinux.org/yay.git "$tempdir"
-    # sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
-    # rm -rf "$tempdir"
-    # mkdir "$HOME/.gnupg"
-    # echo 'keyserver hkps://keyserver.ubuntu.com' > "$HOME/.gnupg/gpg.conf"
-    # log -f 'yay installation'
+    log 'yay installation'
+    install_packages base-devel git
+    tempdir="$(mktemp -d)"
+    git clone https://aur.archlinux.org/yay.git "$tempdir"
+    sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
+    rm -rf "$tempdir"
+    mkdir "$HOME/.gnupg"
+    echo 'keyserver hkps://keyserver.ubuntu.com' > "$HOME/.gnupg/gpg.conf"
+    log -f 'yay installation'
 
     log 'fonts installation'
     install_packages noto-fonts noto-fonts-emoji noto-fonts-cjk
@@ -308,7 +307,10 @@ install_post () {
 
     log 'zsh installation'
     install_packages zsh
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '' --unattended
+    [ -d "$HOME/.oh-my-zsh" ] || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '' --unattended
+    chsh -s $(which zsh)
+    history -c
+    rm "$HOME/.bash"*
     log -f 'zsh installation'
 
     log 'OpenSSH installation'
@@ -345,7 +347,6 @@ install_post () {
     install_packages -a xcursor-openzone
     log -f 'additional packages installation'
 
-    # GDM configuring
     # log 'GDM configuring'
     # tempdir=$(mktemp -d)
     # cd "$tempdir"
@@ -362,7 +363,6 @@ install_post () {
     # rm -rf "$tempdir"
     # log -f 'GDM configuring'
 
-    # GNOME configuring
     log 'GNOME configuring'
     # sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
 
@@ -395,7 +395,7 @@ install_post () {
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/visible-name "'Default'"
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/highlight-colors-set true
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/use-theme-colors false
-    dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/palette $PALLETE
+    dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/palette "$PALETTE"
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/foreground-color "'$FOREGROUND'"
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/background-color "'$BACKGROUND'"
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/highlight-foreground-color "'$FOREGROUND'"
@@ -425,7 +425,7 @@ install_post () {
     dconf write /com/gexperts/Tilix/profiles/$terminal_profile/highlight-colors-set true
     dconf write /com/gexperts/Tilix/profiles/$terminal_profile/highlight-foreground-color "'$FOREGROUND'"
     dconf write /com/gexperts/Tilix/profiles/$terminal_profile/highlight-background-color "'$BACKGROUND_HIGHLIGHT'"
-    dconf write /com/gexperts/Tilix/profiles/$terminal_profile/palette $PALLETE
+    dconf write /com/gexperts/Tilix/profiles/$terminal_profile/palette "$PALETTE"
     dconf write /com/gexperts/Tilix/profiles/$terminal_profile/bold-is-bright false
     dconf write /com/gexperts/Tilix/profiles/$terminal_profile/scrollback-lines 1000000
     dconf write /com/gexperts/Tilix/profiles/$terminal_profile/show-scrollbar false
@@ -464,17 +464,16 @@ install_post () {
 
     log -f 'GNOME configuring'
 
-    log -s 'runtime configuration files cloning'
+    log 'runtime configuration files cloning'
     install_packages rsync
     tempdir="$(mktemp -d)"
-    git clone git@gitlab.com:romanilin/rcs.git "$tempdir"
+    git clone https://gitlab.com/romanilin/rcs.git "$tempdir"
     rsync -a "$tempdir/" "$HOME/"
     rm -rf "$tempdir"
     echo "user_pref(\"identity.fxaccounts.account.device.name\", \"$HOST\");" > "$HOME/.mozilla/firefox/default/user.js"
     log -f 'runtime configuration files cloning'
 
-    # Packages clearing up
-    log -s 'packages clearing up'
+    log 'packages clearing up'
     orphans="$(pacman -Qtdq)"
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
