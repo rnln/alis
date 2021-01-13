@@ -283,7 +283,7 @@ install_post () {
     log 'mirrors configuring'
     sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
-    # sudo sh -c 'reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist'
+    sudo sh -c 'reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist'
     log -f 'mirrors configuring'
 
     # log 'yay installation'
