@@ -464,7 +464,7 @@ install_post () {
     log -f 'GNOME configuring'
 
     log -s 'runtime configuration files cloning'
-    i rsync
+    install_packages rsync
     tempdir="$(mktemp -d)"
     git clone git@gitlab.com:romanilin/rcs.git "$tempdir"
     rsync -a "$tempdir/" "$HOME/"
