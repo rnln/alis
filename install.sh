@@ -2,16 +2,53 @@
 
 set -e
 
-mode='base'
+OPTIND=1
 
-while getopts "g:" option; do
+while getopts 'p' option; do
     case "$option" in
-        g)  mode='gnome'
+        p) mode='post';;
+        c) keep_color_scheme=true;;
     esac
 done
 
+mode=${mode:-base}
+keep_color_scheme=${keep_color_scheme:-false}
+
 shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
+
+
+log () {
+    # log function
+    # -f        start message with "Finished" (default: "Started")
+    # -d DEPTH  add indent in message beggining
+
+    local OPTIND=1
+    local status='Started'
+    local depth=0
+
+    while getopts 'fd:' option; do
+        case "$option" in
+            f)  status='Finished'
+                ;;
+            d)  depth=$OPTARG
+                ;;
+        esac
+    done
+
+    shift $((OPTIND-1))
+    [ "${1:-}" = '--' ] && shift
+
+    if [ $depth -gt 0 ]; then
+        local padding=$(printf "=%.0s" `seq $(($depth * 4 - 2))`)
+        padding="$ES_CYAN$padding>$ES_RESET "
+    else
+        padding=''
+    fi
+
+    echo "$padding$status $ES_BOLD$@$ES_RESET." >&2
+}
+
 
 setup_terminal_colors () {
     # only use colors if connected to a terminal
@@ -29,8 +66,9 @@ setup_terminal_colors () {
     fi
 }
 
+
 setup_color_scheme () {
-    if [ $DEFAULT_COLOR_SCHEME ]; then
+    if [ "$keep_color_scheme" = true ]; then
         BLACK='#000000'
         RED='#aa0000'
         GREEN='#00aa00'
@@ -73,47 +111,19 @@ setup_color_scheme () {
     PALLETE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
 }
 
+
 install_packages () {
     case $1 in
-        -y) yay -S --noconfirm --needed "$@" ;;
+        -a) shift
+            yay -S --noconfirm --needed "$@" ;;
         *) sudo pacman -S --noconfirm --needed "$@" ;;
     esac
 }
 
-log () {
-    # log function
-    # -f        start message with "Finished" (default: "Started")
-    # -d DEPTH  add indent in message beggining
-
-    local OPTIND=1
-    local status='Started'
-    local depth=0
-
-    while getopts "fd:" option; do
-        case "$option" in
-            f)  status='Finished'
-                ;;
-            d)  depth=$OPTARG
-                ;;
-        esac
-    done
-
-    shift $((OPTIND-1))
-    [ "${1:-}" = '--' ] && shift
-
-    if [ $depth -gt 0 ]; then
-        local padding=$(printf "=%.0s" `seq $(($depth * 4 - 2))`)
-        padding="$ES_CYAN$padding>$ES_RESET "
-    else
-        padding=''
-    fi
-
-    echo "$padding$status $ES_BOLD$@$ES_RESET." >&2
-}
 
 system_errors () {
     local sudo=''
-    while getopts "s:" option; do
+    while getopts 's' option; do
         case "$option" in
             s) sudo='sudo ' ;;
         esac
@@ -136,6 +146,7 @@ system_errors () {
         esac
     done
 }
+
 
 install_base () {
     echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
@@ -252,75 +263,106 @@ install_base () {
     log -f installation
 }
 
-install_gnome () {
-    # grub configuring
+
+install_post () {
+    sudo true
+
+    echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
+
+    log 'swappiness configuring'
+    sudo sh -c 'echo "vm.swappiness=10" > /etc/sysctl.conf'
+    log -f 'swappiness configuring'
+
+    log 'grub configuring'
     sudo sed -i 's/^\(GRUB_TIMEOUT\).*/\1=0/' /etc/default/grub
     # sudo sed -i '/GRUB_TIMEOUT/d' /etc/default/grub
     # sudo sh -c 'echo "GRUB_TIMEOUT=0" >> /etc/default/grub'
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'grub configuring'
 
-    # mirrors configuring
+    log 'mirrors configuring'
     sudo pacman -Syyu --noconfirm
     install_packages reflector
     sudo sh -c 'reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist'
+    log -f 'mirrors configuring'
 
-    # yay installation
+    log 'yay installation'
     install_packages base-devel git
-    git clone git://aur.archlinux.org/yay.git "$HOME/yay"
-    sh -c "cd '$HOME/Downloads/yay' && makepkg -si --noconfirm --needed"
-    rm -rf "$HOME/yay"
+    tempdir="$(mktemp -d)"
+    git clone git://aur.archlinux.org/yay.git "$tempdir"
+    sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
+    rm -rf "$tempdir"
     mkdir "$HOME/.gnupg"
     echo 'keyserver hkps://keyserver.ubuntu.com' > "$HOME/.gnupg/gpg.conf"
+    log -f 'yay installation'
 
-    # fonts installation
+    log 'fonts installation'
     install_packages noto-fonts noto-fonts-emoji noto-fonts-cjk
     install_packages ttf-jetbrains-mono
+    log -f 'fonts installation'
 
-    # zsh installation
+    log 'GNOME installation'
+    install_packages gdm gnome-terminal
+    log -f 'GNOME installation'
+
+    log 'zsh installation'
     install_packages zsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '' --unattended
+    log -f 'zsh installation'
 
-    # OpenSSH installation
+    log 'OpenSSH installation'
     install_packages openssh
-    sudo sh -c 'cat << EOF >> /etc/ssh/sshd_config
-
-    # Disable all forwarding features (overrides all other forwarding-related options).
-    DisableForwarding yes
-    EOF'
+    sudo sh -c 'echo "DisableForwarding yes # disable all forwarding features (overrides all other forwarding-related options)" >> /etc/ssh/sshd_config'
     sudo sed -i 's/^#\(IgnoreRhosts\).*/\1 yes/' /etc/ssh/sshd_config
     # sudo sed -i 's/^#\(PasswordAuthentication\).*/\1 no/' /etc/ssh/sshd_config
     sudo sed -i 's/^#\(PermitRootLogin\).*/\1 no/' /etc/ssh/sshd_config
     sudo systemctl enable sshd
+    log -f 'OpenSSH installation'
 
-    # ufw installation
-    i ufw
+    log 'ufw installation'
+    install_packages ufw
     sudo ufw limit ssh
+    sudo ufw allow transmission
     sudo systemctl enable ufw
+    log -f 'ufw installation'
 
-    # additional packages installation
-    install_packages man vim wget nmap imagemagick python python-pip inetutils code firefox telegram-desktop vlc transmission-gtk
+    log 'additional packages installation'
+    install_packages \
+        man \
+        vim \
+        # wget \
+        # nmap \
+        # imagemagick \
+        # python \
+        # python-pip \
+        # inetutils \
+        # code \
+        # firefox \
+        # telegram-desktop \
+        # vlc \
+        # transmission-gtk
+    install_packages -a xcursor-openzone
+    log -f 'additional packages installation'
 
     # GDM configuring
-    workdir=$(mktemp -d)
-    cd "$workdir"
+    # log 'GDM configuring'
+    # tempdir=$(mktemp -d)
+    # cd "$tempdir"
 
-    # me.gresource "$file" >"$workdir$file"
-    #     echo "<file>${file#\/}</file>" >>"$workdir/gnome-shell-theme.gresource.xml"
+    # me.gresource "$file" >"$tempdir$file"
+    #     echo "<file>${file#\/}</file>" >>"$tempdir/gnome-shell-theme.gresource.xml"
     # done
-    echo '</gresource></gresources>' >>"$workdir/gnome-shell-theme.gresource.xml"
-    sed -i -zE 's/(#lockDialogGroup \{)[^}]+/\1 background-color: #000000; /g' "$workdir/org/gnome/shell/theme/gnome-shell.css"
-    glib-compile-resources "$workdir/gnome-shell-theme.gresource.xml"
-    sudo cp -f /usr/share/gnome-shell/gnome-shell-theme.gresource /usr/share/gnome-shell/gnome-shell-theme.gresource.bak
-    sudo cp -f "$workdir/gnome-shell-theme.gresource" /usr/share/gnome-shell/
-    cd - > /dev/null
-    rm -rf "$workdir"
-    log -f 'GDM configuring'
+    # echo '</gresource></gresources>' >>"$tempdir/gnome-shell-theme.gresource.xml"
+    # sed -i -zE 's/(#lockDialogGroup \{)[^}]+/\1 background-color: #000000; /g' "$tempdir/org/gnome/shell/theme/gnome-shell.css"
+    # glib-compile-resources "$tempdir/gnome-shell-theme.gresource.xml"
+    # sudo cp -f /usr/share/gnome-shell/gnome-shell-theme.gresource /usr/share/gnome-shell/gnome-shell-theme.gresource.bak
+    # sudo cp -f "$tempdir/gnome-shell-theme.gresource" /usr/share/gnome-shell/
+    # cd - > /dev/null
+    # rm -rf "$tempdir"
+    # log -f 'GDM configuring'
 
     # GNOME configuring
     log -s 'GNOME configuring'
-    # https://gist.github.com/probonopd/9feb7c20257af5dd915e3a9f2d1f2277
-    # https://refi64.com/posts/dont-boycott-wayland.html
     # sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
 
     dconf write /org/gnome/desktop/input-sources/sources "[('xkb', 'us'), ('xkb', 'ru')]"
@@ -360,8 +402,8 @@ install_gnome () {
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/cell-height-scale 1.15
     dconf write /org/gnome/terminal/legacy/profiles:/:$terminal_profile/scrollback-lines 1000000
 
-    sudo sed -i 's/^Exec=tilix$/& --maximize/' /usr/share/applications/com.gexperts.Tilix.desktop
-    sudo sed -i '/DBusActivatable/d' /usr/share/applications/com.gexperts.Tilix.desktop
+    # sudo sed -i 's/^Exec=tilix$/& --maximize/' /usr/share/applications/com.gexperts.Tilix.desktop
+    # sudo sed -i '/DBusActivatable/d' /usr/share/applications/com.gexperts.Tilix.desktop
     dconf write /com/gexperts/Tilix/app-title "'\${appName}: \${title}'"
     dconf write /com/gexperts/Tilix/unsafe-paste-alert false
     dconf write /com/gexperts/Tilix/window-save-state true
@@ -421,12 +463,14 @@ install_gnome () {
 
     log -f 'GNOME configuring'
 
-    # Copying home directory configuration files
-    log -s 'copying home directory configuration files'
+    log -s 'runtime configuration files cloning'
     i rsync
-    rsync -a "$ARCH_INSTALL/home/" "$HOME/"
+    tempdir="$(mktemp -d)"
+    git clone git@gitlab.com:romanilin/rcs.git "$tempdir"
+    rsync -a "$tempdir/" "$HOME/"
+    rm -rf "$tempdir"
     echo "user_pref(\"identity.fxaccounts.account.device.name\", \"$HOST\");" > "$HOME/.mozilla/firefox/default/user.js"
-    log -f 'Copying home directory configuration files'
+    log -f 'runtime configuration files cloning'
 
     # Packages clearing up
     log -s 'packages clearing up'
@@ -434,22 +478,19 @@ install_gnome () {
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
     fi
-    log -f 'Packages clearing up'
+    log -f 'packages clearing up'
 
-    log -f 'Post-installation'
+    echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
 
     system_errors -s
 }
 
-main () {
-    setup_terminal_colors
 
-    if [ "$mode" == 'gnome' ]; then
-        # install_gnome
-        echo 'GNOME installation.'
-    else
-        install_base
-    fi
-}
+setup_terminal_colors
 
-main
+if [ "$mode" == 'post' ]; then
+    setup_color_scheme
+    install_post
+else
+    install_base
+fi
