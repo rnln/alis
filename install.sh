@@ -303,6 +303,7 @@ install_post () {
 
     log 'GNOME installation'
     install_packages gdm gnome-terminal
+    sudo systemctl enable gdm
     log -f 'GNOME installation'
 
     log 'zsh installation'
@@ -362,7 +363,7 @@ install_post () {
     # log -f 'GDM configuring'
 
     # GNOME configuring
-    log -s 'GNOME configuring'
+    log 'GNOME configuring'
     # sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
 
     dconf write /org/gnome/desktop/input-sources/sources "[('xkb', 'us'), ('xkb', 'ru')]"
