@@ -2,6 +2,17 @@
 
 set -e
 
+mode='base'
+
+while getopts "g:" option; do
+    case "$option" in
+        g)  mode='gnome'
+    esac
+done
+
+shift $((OPTIND-1))
+[ "${1:-}" = '--' ] && shift
+
 setup_terminal_colors () {
     # only use colors if connected to a terminal
     if [ -t 1 ]; then
@@ -98,6 +109,31 @@ log () {
     fi
 
     echo "$padding$status $ES_BOLD$@$ES_RESET." >&2
+}
+
+system_errors () {
+    local sudo=''
+    while getopts "s:" option; do
+        case "$option" in
+            s) sudo='sudo ' ;;
+        esac
+    done
+
+    echo -e "${ES_BOLD}System errors information${ES_RESET}."
+    echo -e "${ES_BOLD}${ES_CYAN}${sudo}systemctl --failed${ES_RESET}:"
+    $sudo systemctl --failed
+    echo -e "${ES_BOLD}${ES_CYAN}${sudo}journalctl -p 3 -xb${ES_RESET}:"
+    $sudo journalctl -p 3 -xb
+
+    while true; do
+        read -e -p "Clear these logs? [Y/n] " yn
+        case $yn in
+            [Nn]*) ;;
+            *)  $sudo systemctl reset-failed
+                $sudo journalctl --vacuum-size=0
+                ;;
+        esac
+    done
 }
 
 install_base () {
@@ -209,6 +245,8 @@ install_base () {
     log 'partitions unmounting'
     umount -R /mnt
     log -f 'partitions unmounting'
+
+    system_errors
 
     log -f installation
 }
@@ -389,28 +427,28 @@ install_gnome () {
     echo "user_pref(\"identity.fxaccounts.account.device.name\", \"$HOST\");" > "$HOME/.mozilla/firefox/default/user.js"
     log -f 'Copying home directory configuration files'
 
-    # Packages cleaning up
-    log -s 'packages cleaning up'
+    # Packages clearing up
+    log -s 'packages clearing up'
     orphans="$(pacman -Qtdq)"
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
     fi
-    log -f 'Packages cleaning up'
+    log -f 'Packages clearing up'
 
     log -f 'Post-installation'
 
-    # Errors
-    echo -e "Getting ${ES_BOLD}System errors information${ES_RESET}..."
-    echo -e "${ES_BOLD}sudo systemctl --failed${ES_RESET}:"
-    sudo systemctl --failed
-    echo -e "${ES_BOLD}sudo journalctl -p 3 -xb${ES_RESET}:"
-    sudo journalctl -p 3 -xb
+    system_errors -s
 }
 
 main () {
     setup_terminal_colors
 
-    install_base
+    if [ "$mode" == 'gnome' ]; then
+        # install_gnome
+        echo 'GNOME installation.'
+    else
+        install_base
+    fi
 }
 
 main
