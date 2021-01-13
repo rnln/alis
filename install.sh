@@ -163,6 +163,8 @@ install_base () {
     log -f 'file systems mounting'
 
     log 'essential packages installation'
+    reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist
+    pacman -Syy
     pacstrap /mnt base linux-lts linux-firmware # linux-lts-headers
     log -f 'essential packages installation'
 
