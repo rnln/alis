@@ -152,12 +152,12 @@ install_base () {
     echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
 
     log 'getting user data'
-    read -p "Hostname [host]: " hostname
+    read -p "(1/7) Hostname [host]: " hostname
     hostname=${hostname:-host}
     while true; do
-        read -s -p "Root password [root]: " root_password
+        read -s -p "(2/7) Root password [root]: " root_password
         echo
-        read -s -p "Retype root password [root]: " root_password_check
+        read -s -p "(3/7) Retype root password [root]: " root_password_check
         echo
         if [ "$root_password" == "$root_password_check" ]; then
             break
@@ -165,14 +165,14 @@ install_base () {
         echo "Password, try again"
     done
     root_password=${root_password:-root}
-    read -p "User full name [User]: " user_fullname
+    read -p "(4/7) User full name [User]: " user_fullname
     user_fullname=${user_fullname:-User}
-    read -p "Username [user]: " user_username
+    read -p "(5/7) Username [user]: " user_username
     user_username=${user_username:-user}
     while true; do
-        read -s -p "User password [user]: " user_password
+        read -s -p "(6/7) User password [user]: " user_password
         echo
-        read -s -p "Retype user password [user]: " user_password_check
+        read -s -p "(7/7) Retype user password [user]: " user_password_check
         echo
         if [ "$user_password" == "$user_password_check" ]; then
             break
@@ -281,7 +281,7 @@ install_post () {
     log -f 'grub configuring'
 
     log 'mirrors configuring'
-    sudo pacman -Syyu --noconfirm
+    sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
     sudo sh -c 'reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist'
     log -f 'mirrors configuring'
