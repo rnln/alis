@@ -20,7 +20,7 @@ shift $((OPTIND-1))
 
 log () {
     # log function
-    # -f        start message with "Finished" (default: "Started")
+    # -f        set "Finished" as status message (default is "Started")
     # -d DEPTH  add indent in message beggining
 
     local OPTIND=1
@@ -131,9 +131,9 @@ system_errors () {
 
     echo -e "${ES_BOLD}System errors information${ES_RESET}."
     echo -e "${ES_BOLD}${ES_CYAN}${sudo}systemctl --failed${ES_RESET}:"
-    $sudo systemctl --failed
+    $sudo PAGER= systemctl --failed
     echo -e "${ES_BOLD}${ES_CYAN}${sudo}journalctl -p 3 -xb${ES_RESET}:"
-    $sudo journalctl -p 3 -xb
+    $sudo PAGER= journalctl -p 3 -xb
 
     while true; do
         read -e -p "Clear these logs? [Y/n] " yn
@@ -308,7 +308,7 @@ install_post () {
     log 'zsh installation'
     install_packages zsh
     [ -d "$HOME/.oh-my-zsh" ] || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '' --unattended
-    chsh -s $(which zsh)
+    sudo chsh -s "$(which zsh)" "$(whoami)"
     history -c
     rm "$HOME/.bash"*
     log -f 'zsh installation'
