@@ -128,9 +128,10 @@ system_errors () {
     while true; do
         read -e -p "Clear these logs? [Y/n] " yn
         case $yn in
-            [Nn]*) ;;
+            [Nn]*) break ;;
             *)  $sudo systemctl reset-failed
-                $sudo journalctl --vacuum-size=0
+                $sudo journalctl --vacuum-time=1s
+                break
                 ;;
         esac
     done
@@ -153,9 +154,9 @@ install_base () {
         echo "Password, try again"
     done
     root_password=${root_password:-root}
-    read -p "User full name [User]: " hostname
+    read -p "User full name [User]: " user_fullname
     user_fullname=${user_fullname:-User}
-    read -p "Username [user]: " hostname
+    read -p "Username [user]: " user_username
     user_username=${user_username:-user}
     while true; do
         read -s -p "User password [user]: " user_password
@@ -224,9 +225,9 @@ install_base () {
     log -f 'network configuration'
 
     log 'users configuring'
-    arch-chroot /mnt sh -c "(echo '$root_password'; echo '$root_password') | passwd"
+    arch-chroot /mnt sh -c "(echo '$root_password'; echo '$root_password') | passwd >/dev/null"
     arch-chroot /mnt useradd --create-home --comment $user_fullname --groups wheel,audio $user_username
-    arch-chroot /mnt sh -c "(echo '$user_password'; echo '$user_password') | passwd $user_username"
+    arch-chroot /mnt sh -c "(echo '$user_password'; echo '$user_password') | passwd >/dev/null $user_username"
     arch-chroot /mnt pacman -S --noconfirm --needed sudo
     sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
     log -f 'users configuration'
