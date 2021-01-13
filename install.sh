@@ -289,7 +289,7 @@ install_post () {
     log 'yay installation'
     install_packages base-devel git
     tempdir="$(mktemp -d)"
-    git clone git://aur.archlinux.org/yay.git "$tempdir"
+    git clone https://aur.archlinux.org/yay.git "$tempdir"
     sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
     rm -rf "$tempdir"
     mkdir "$HOME/.gnupg"
