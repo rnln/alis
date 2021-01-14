@@ -30,7 +30,7 @@ OPTIND=1
 while getopts 'p' option; do
     case "$option" in
         p) mode='post' ;;
-        c) keep_color_scheme=true
+        c) keep_color_scheme=true ;;
         l) lts=false
     esac
 done
