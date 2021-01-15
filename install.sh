@@ -1,16 +1,15 @@
 #!/bin/sh
-#
 # Run script via curl:
 #   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
 # Arguments:
 #   -l, --lts   Install linux-lts package instead of linux
-#   -p, --post  Start post-install (grub, swapiness, pacman configuring, GNOME installation, etc.)
+#   -p, --post  Start post-installation (grub, swapiness, pacman configuring, GNOME installation, etc.)
 #               By deafult script starts base Arch Linux installation with NetworkManager
 #   -v, --vbox  Install VirtualBox guest utilities
 #   -x, --xorg  Configure GNOME to use only Xorg and disable Wayland
 # Example:
 #   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)" '' --post --xorg
-#
+
 set -e
 
 for option in "$@"; do
@@ -33,8 +32,6 @@ mode=base
 vbox=false
 xorg=false
 
-mirror_countries=Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine
-
 OPTIND=1
 
 while getopts 'lpvx' option; do
@@ -48,6 +45,10 @@ done
 
 shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
+
+
+mirror_countries=Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine
+sudo=$([ "$EUID" == 0 ] || echo sudo)
 
 
 log () {
@@ -130,15 +131,12 @@ install_packages () {
     case $1 in
         -a) shift
             yay -S --noconfirm --needed "$@" ;;
-        *) sudo pacman -S --noconfirm --needed "$@"
+        *) $sudo pacman -S --noconfirm --needed "$@"
     esac
 }
 
 
 system_errors () {
-    local sudo=''
-    [ "$1" == '-s' ] && sudo='sudo'
-
     echo -e "${ES_BOLD}System errors information${ES_RESET}."
     echo -e "${ES_BOLD}${ES_CYAN}systemctl --failed${ES_RESET}:"
     PAGER= $sudo systemctl --failed
@@ -304,8 +302,6 @@ install_post () {
 
     log -s 'grub configuring'
     sudo sed -i 's/^\(GRUB_TIMEOUT\).*/\1=0/' /etc/default/grub
-    # sudo sed -i '/GRUB_TIMEOUT/d' /etc/default/grub
-    # sudo sh -c 'echo "GRUB_TIMEOUT=0" >>/etc/default/grub'
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'grub configuring'
 
@@ -335,7 +331,6 @@ install_post () {
 
     log -s 'zsh installation'
     install_packages zsh
-    # [ -d "$HOME/.oh-my-zsh" ] || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '' --unattended
     curl -fsSL https://starship.rs/install.sh | sudo bash -s -- -f
     sudo chsh -s "$(which zsh)" "$(whoami)"
     rm "$HOME/.bash"*
@@ -449,7 +444,7 @@ install_post () {
 
     echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
 
-    system_errors -s
+    system_errors
 }
 
 
@@ -465,4 +460,5 @@ fi
 if [ "$vbox" == true ]; then
     pacman -Q linux || install_packages virtualbox-guest-dkms
     install_packages virtualbox-guest-utils
+    $sudo systemctl enable --now vboxservice
 fi
