@@ -5,25 +5,26 @@
 # Arguments:
 #   -p, --post  Start post-install (grub, swapiness, pacman configuring, GNOME installation, etc.)
 #               By deafult script starts base Arch Linux installation with NetworkManager
-#   --no-lts    Install linux package instead of linux-lts
+#   -l, --lts   Install linux package instead of linux-lts
 # Example:
-#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)" '' --unattended
+#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)" '' --post
 #
 set -e
 
 for option in "$@"; do
     shift
     case "$option" in
-        '--no-lts')
+        '--lts')
             set -- "$@" '-l' ;;
-        *)
-            set -- "$@" "$option"
+        '--post')
+            set -- "$@" '-p' ;;
+        *)  set -- "$@" "$option"
     esac
 done
 
 mode=base
 keep_color_scheme=false
-lts=true
+lts=false
 
 OPTIND=1
 
@@ -31,7 +32,7 @@ while getopts 'p' option; do
     case "$option" in
         p) mode='post' ;;
         c) keep_color_scheme=true ;;
-        l) lts=false
+        l) lts=true
     esac
 done
 
@@ -45,13 +46,19 @@ log () {
     # -d DEPTH  add indent in message beggining
 
     local OPTIND=1
-    local status='Started'
     local depth=0
+    local error=false
+    local format="${ES_BOLD}"
+    local padding=''
 
-    while getopts 'fd:' option; do
+    while getopts 'd:efs' option; do
         case "$option" in
-            f) status='Finished' ;;
-            d) depth=$OPTARG
+            d) depth=$OPTARG ;;
+            e) error=true
+               format="${format}${ES_RED}"
+               ;;
+            f) status='Finished ' ;;
+            s) status='Started ' ;;
         esac
     done
 
@@ -59,13 +66,11 @@ log () {
     [ "${1:-}" = '--' ] && shift
 
     if [ $depth -gt 0 ]; then
-        local padding=$(printf "=%.0s" `seq $(($depth * 4 - 2))`)
-        padding="$ES_CYAN$padding>$ES_RESET "
-    else
-        padding=''
+        padding=$(printf "=%.0s" `seq $(($depth * 4 - 2))`)
+        padding="${ES_CYAN}$padding>${ES_RESET} "
     fi
 
-    echo "$padding$status $ES_BOLD$@$ES_RESET." >&2
+    echo -e "$padding$status${format}$@${ES_RESET}." >&2
 }
 
 
@@ -168,7 +173,7 @@ system_errors () {
 install_base () {
     echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
 
-    log 'getting user data'
+    log -s 'getting user data'
     read -p "(1/7) Hostname [host]: " hostname
     hostname=${hostname:-host}
     while true; do
@@ -199,11 +204,11 @@ install_base () {
     user_password=${user_password:-user}
     log -f 'getting user data'
 
-    log 'system clock synchronizing'
+    log -s 'system clock synchronizing'
     timedatectl set-ntp true
     log -f 'system clock synchronizing'
 
-    log 'partitioning'
+    log -s 'partitioning'
     sector_size=512
     swap_sectors=$((`free -b | awk '/Mem/ {print $2}'` / $sector_size))
     sfdisk --list
@@ -216,24 +221,29 @@ install_base () {
     " | sfdisk /dev/sda
     log -f 'partitioning'
 
-    log 'partitions formatting'
+    log -s 'partitions formatting'
     mkfs.fat -F 32 /dev/sda1
     mkswap /dev/sda2
     mkfs.ext4 /dev/sda3
     log -f 'partitions formatting'
 
-    log 'file systems mounting'
+    log -s 'file systems mounting'
     mount /dev/sda3 /mnt
     swapon /dev/sda2
     log -f 'file systems mounting'
 
-    log 'essential packages installation'
+    log -s 'essential packages installation'
     reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist
     pacman -Syy
-    pacstrap /mnt base linux-lts linux-firmware # linux-lts-headers
+    pacstrap /mnt base linux-firmware
+    if [ "$lts" == true ]; then
+        pacstrap /mnt linux-lts # linux-lts-headers
+    else
+        pacstrap /mnt linux
+    fi
     log -f 'essential packages installation'
 
-    log 'system configuring'
+    log -s 'system configuring'
     genfstab -U /mnt >> /mnt/etc/fstab
     # arch-chroot /mnt ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
     ln --force --symbolic /mnt/usr/share/zoneinfo/Europe/Moscow /mnt/etc/localtime
@@ -243,7 +253,7 @@ install_base () {
     echo LANG=en_US.UTF-8 > /mnt/etc/locale.conf
     log -f 'system configuring'
 
-    log 'network configuring'
+    log -s 'network configuring'
     echo "$hostname" > /mnt/etc/hostname
     echo '127.0.0.1 localhost' > /mnt/etc/hosts
     echo '::1 localhost' >> /mnt/etc/hosts
@@ -252,7 +262,7 @@ install_base () {
     arch-chroot /mnt systemctl enable NetworkManager
     log -f 'network configuring'
 
-    log 'users configuring'
+    log -s 'users configuring'
     arch-chroot /mnt sh -c "(echo '$root_password'; echo '$root_password') | passwd >/dev/null"
     arch-chroot /mnt useradd --create-home --comment $user_fullname --groups wheel,audio $user_username
     arch-chroot /mnt sh -c "(echo '$user_password'; echo '$user_password') | passwd >/dev/null $user_username"
@@ -260,7 +270,7 @@ install_base () {
     sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
     log -f 'users configuring'
 
-    log 'boot loader installation and configuring'
+    log -s 'boot loader installation and configuring'
     arch-chroot /mnt pacman -S --noconfirm --needed grub efibootmgr
     mkdir /mnt/boot/efi
     # arch-chroot /mnt mount /dev/sda1 /boot/efi
@@ -270,7 +280,7 @@ install_base () {
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'boot loader installation and configuring'
 
-    log 'partitions unmounting'
+    log -s 'partitions unmounting'
     umount -R /mnt
     log -f 'partitions unmounting'
 
@@ -281,28 +291,34 @@ install_base () {
 
 
 install_post () {
-    sudo true
+    # prevent sudo timeout
+    command -v sudo >/dev/null 2>&1 || {
+        log -e "sudo isn't installed"
+        exit 1
+    }
+    sudo cp /etc/sudoers /etc/sudoers.bak
+    sudo bash -c "echo '$(whoami) ALL=(ALL) NOPASSWD: ALL' | (EDITOR='tee -a' visudo)"
 
     echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
 
-    log 'swappiness configuring'
+    log -s 'swappiness configuring'
     sudo sh -c 'echo "vm.swappiness=10" > /etc/sysctl.conf'
     log -f 'swappiness configuring'
 
-    log 'grub configuring'
+    log -s 'grub configuring'
     sudo sed -i 's/^\(GRUB_TIMEOUT\).*/\1=0/' /etc/default/grub
     # sudo sed -i '/GRUB_TIMEOUT/d' /etc/default/grub
     # sudo sh -c 'echo "GRUB_TIMEOUT=0" >> /etc/default/grub'
     sudo grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'grub configuring'
 
-    log 'pacman configuring'
+    log -s 'pacman configuring'
     sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
     sudo sh -c 'reflector --latest 20 --sort rate -c Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine --protocol https > /etc/pacman.d/mirrorlist'
     log -f 'pacman configuring'
 
-    log 'yay installation'
+    log -s 'yay installation'
     install_packages base-devel git
     tempdir="$(mktemp -d)"
     git clone https://aur.archlinux.org/yay.git "$tempdir"
@@ -312,17 +328,17 @@ install_post () {
     echo 'keyserver hkps://keyserver.ubuntu.com' > "$HOME/.gnupg/gpg.conf"
     log -f 'yay installation'
 
-    log 'fonts installation'
+    log -s 'fonts installation'
     install_packages noto-fonts noto-fonts-emoji noto-fonts-cjk
     install_packages ttf-jetbrains-mono
     log -f 'fonts installation'
 
-    log 'GNOME installation'
+    log -s 'GNOME installation'
     install_packages gdm gnome-terminal
     sudo systemctl enable gdm
     log -f 'GNOME installation'
 
-    log 'zsh installation'
+    log -s 'zsh installation'
     install_packages zsh
     # [ -d "$HOME/.oh-my-zsh" ] || sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" '' --unattended
     curl -fsSL https://starship.rs/install.sh | bash -s -- -f
@@ -330,7 +346,7 @@ install_post () {
     rm "$HOME/.bash"*
     log -f 'zsh installation'
 
-    log 'OpenSSH installation'
+    log -s 'OpenSSH installation'
     install_packages openssh
     sudo sh -c 'echo "DisableForwarding yes # disable all forwarding features (overrides all other forwarding-related options)" >> /etc/ssh/sshd_config'
     sudo sed -i 's/^#\(IgnoreRhosts\).*/\1 yes/' /etc/ssh/sshd_config
@@ -339,14 +355,14 @@ install_post () {
     sudo systemctl enable sshd
     log -f 'OpenSSH installation'
 
-    log 'ufw installation'
+    log -s 'ufw installation'
     install_packages ufw
     sudo ufw limit ssh
     sudo ufw allow transmission
     sudo systemctl enable ufw
     log -f 'ufw installation'
 
-    log 'additional packages installation'
+    log -s 'additional packages installation'
     install_packages \
         man \
         vim \
@@ -365,7 +381,7 @@ install_post () {
     install_packages -a xcursor-openzone
     log -f 'additional packages installation'
 
-    # log 'GDM configuring'
+    # log -s 'GDM configuring'
     # tempdir=$(mktemp -d)
     # cd "$tempdir"
 
@@ -381,7 +397,7 @@ install_post () {
     # rm -rf "$tempdir"
     # log -f 'GDM configuring'
 
-    log 'GNOME configuring'
+    log -s 'GNOME configuring'
     # sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
 
     dconf write /org/gnome/desktop/input-sources/sources "[('xkb', 'us'), ('xkb', 'ru')]"
@@ -482,7 +498,7 @@ install_post () {
 
     log -f 'GNOME configuring'
 
-    log 'runtime configuration files cloning'
+    log -s 'runtime configuration files cloning'
     install_packages rsync
     tempdir="$(mktemp -d)"
     git clone https://gitlab.com/romanilin/rcs.git "$tempdir"
@@ -491,7 +507,7 @@ install_post () {
     echo "user_pref(\"identity.fxaccounts.account.device.name\", \"$HOST\");" > "$HOME/.mozilla/firefox/default/user.js"
     log -f 'runtime configuration files cloning'
 
-    log 'packages clearing up'
+    log -s 'packages clearing up'
     orphans="$(pacman -Qtdq)"
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
@@ -501,6 +517,9 @@ install_post () {
     echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
 
     system_errors -s
+
+    # revert original /etc/sudoers after preventing
+    sudo mv /etc/sudoers.bak /etc/sudoers
 }
 
 
