@@ -353,22 +353,17 @@ install_post () {
     log -f 'ufw installation'
 
     log -s 'additional packages installation'
-    install_packages \
-        expect \
-        man \
-        tilix \
-        vim \
-        # wget \
-        # nmap \
-        # imagemagick \
-        # python \
-        # python-pip \
-        # inetutils \
-        code \
-        # firefox \
-        # telegram-desktop \
-        # vlc \
-        # transmission-gtk
+    install_packages expect man tilix vim code
+    # wget
+    # nmap
+    # imagemagick
+    # python
+    # python-pip
+    # inetutils
+    # firefox
+    # telegram-desktop
+    # vlc
+    # transmission-gtk
     install_packages -a xcursor-openzone
     log -f 'additional packages installation'
 
