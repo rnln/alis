@@ -104,12 +104,12 @@ setup_terminal_colors () {
 
 setup_color_scheme () {
     BLACK='#121212'
-    RED='#ff746c'
-    GREEN='#00bb23'
-    YELLOW='#a4a600'
-    BLUE='#a594ff'
-    MAGENTA='#ff5aff'
-    CYAN='#00b4b5'
+    RED='#ff714f' # ff746c
+    GREEN='#d0d000' # 00bb23
+    YELLOW='#00da69' # a4a600
+    BLUE='#90cbdb' # a594ff
+    MAGENTA='#7e9df9' # ff5aff
+    CYAN='#ff5de1' # 00b4b5
     WHITE='#ffffff'
     BLACK_BRIGHT='#555555'
     RED_BRIGHT=$RED
