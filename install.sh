@@ -336,7 +336,7 @@ install_post () {
     log -f 'yay installation'
 
     log -s 'fonts installation'
-    install_packages noto-fonts noto-fonts-emoji noto-fonts-cjk
+    install_packages noto-fonts noto-fonts-emoji # noto-fonts-cjk
     install_packages ttf-jetbrains-mono
     log -f 'fonts installation'
 
@@ -357,8 +357,8 @@ install_post () {
 
     log -s 'zsh installation'
     install_packages zsh
-    echo 'export XDG_CONFIG_HOME="$HOME/.config"' >/etc/zshenv
-    echo 'export ZDOTDIR="$XDG_CONFIG_HOME/zsh"' >>/etc/zshenv
+    sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME/.config\"' >/etc/zshenv"
+    sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME/zsh\"' >>/etc/zshenv"
     install_packages -a starship-bin
     sudo chsh -s "$(which zsh)" "$(whoami)"
     export HISTFILE=/dev/null
