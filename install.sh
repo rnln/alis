@@ -51,6 +51,23 @@ mirror_countries=Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,
 sudo=$([ "$EUID" == 0 ] || echo sudo)
 
 
+setup_terminal_colors () {
+    # only use colors if connected to a terminal
+    if [ -t 1 ]; then
+        ES_BLACK=`tput setaf 0`
+        ES_RED=`tput setaf 1`
+        ES_GREEN=`tput setaf 2`
+        ES_YELLOW=`tput setaf 3`
+        ES_BLUE=`tput setaf 4`
+        ES_MAGENTA=`tput setaf 5`
+        ES_CYAN=`tput setaf 6`
+        ES_WHITE=`tput setaf 7`
+        ES_BOLD=`tput bold`
+        ES_RESET=`tput sgr0`
+    fi
+}
+
+
 log () {
     # log function
     # -f        set "Finished" as status message (default is "Started")
@@ -85,32 +102,16 @@ log () {
 }
 
 
-setup_terminal_colors () {
-    # only use colors if connected to a terminal
-    if [ -t 1 ]; then
-        ES_BLACK=`tput setaf 0`
-        ES_RED=`tput setaf 1`
-        ES_GREEN=`tput setaf 2`
-        ES_YELLOW=`tput setaf 3`
-        ES_BLUE=`tput setaf 4`
-        ES_MAGENTA=`tput setaf 5`
-        ES_CYAN=`tput setaf 6`
-        ES_WHITE=`tput setaf 7`
-        ES_BOLD=`tput bold`
-        ES_RESET=`tput sgr0`
-    fi
-}
-
-
 setup_color_scheme () {
     BLACK='#121212'
-    RED='#ff714f' # ff746c
-    GREEN='#d0d000' # 00bb23
-    YELLOW='#00da69' # a4a600
-    BLUE='#90cbdb' # a594ff
-    MAGENTA='#7e9df9' # ff5aff
-    CYAN='#ff5de1' # 00b4b5
+    RED='#ff714f'
+    GREEN='#00d965'
+    YELLOW='#e0e000'
+    BLUE='#7e9df9'
+    MAGENTA='#ff5de1'
+    CYAN='#90cbdb'
     WHITE='#ffffff'
+
     BLACK_BRIGHT='#555555'
     RED_BRIGHT=$RED
     GREEN_BRIGHT=$GREEN
@@ -118,21 +119,12 @@ setup_color_scheme () {
     BLUE_BRIGHT=$BLUE
     MAGENTA_BRIGHT=$MAGENTA
     CYAN_BRIGHT=$CYAN
-    WHITE_BRIGHT='#ffffff'
+    WHITE_BRIGHT=$WHITE
 
     export FOREGROUND=$WHITE
     export BACKGROUND=$BLACK
-    export BACKGROUND_HIGHLIGHT='#264f78'
+    export BACKGROUND_HIGHLIGHT='#1f4871' #3298ff66
     export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
-}
-
-
-install_packages () {
-    case $1 in
-        -a) shift
-            yay -S --noconfirm --needed "$@" ;;
-        *) $sudo pacman -S --noconfirm --needed "$@"
-    esac
 }
 
 
@@ -161,6 +153,15 @@ system_errors () {
 revert_sudoers () {
     # revert original /etc/sudoers after preventing sudo timeout
     [ -f '/etc/sudoers.bak' ] && sudo mv /etc/sudoers.bak /etc/sudoers
+}
+
+
+install_packages () {
+    case $1 in
+        -a) shift
+            yay -S --noconfirm --needed "$@" ;;
+        *) $sudo pacman -S --noconfirm --needed "$@"
+    esac
 }
 
 
@@ -285,7 +286,9 @@ install_base () {
 
 
 install_post () {
-    # prevent sudo timeout
+    echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
+
+    log -s 'sudo timeout preventing'
     command -v sudo >/dev/null 2>&1 || {
         log -e "sudo isn't installed"
         exit 1
@@ -293,8 +296,7 @@ install_post () {
     trap revert_sudoers EXIT SIGHUP SIGINT SIGTERM
     sudo cp /etc/sudoers /etc/sudoers.bak
     sudo sh -c "echo '$(whoami) ALL=(ALL) NOPASSWD: ALL' | (EDITOR='tee -a' visudo)" >/dev/null
-
-    echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
+    log -f 'sudo timeout preventing'
 
     log -s 'swappiness configuring'
     sudo sh -c 'echo "vm.swappiness=10" >/etc/sysctl.conf'
@@ -313,7 +315,7 @@ install_post () {
 
     log -s 'yay installation'
     install_packages base-devel git
-    tempdir="$(mktemp -d)"
+    local tempdir="$(mktemp -d)"
     git clone https://aur.archlinux.org/yay.git "$tempdir"
     sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
     rm -rf "$tempdir"
@@ -325,13 +327,24 @@ install_post () {
     log -f 'fonts installation'
 
     log -s 'GNOME installation'
-    install_packages gdm gnome-terminal
+    install_packages gdm gnome-terminal gnome-control-center
+    # eog
+    # gnome-themes-extra
+    # gedit
+    # gnome-calculator
+    # gnome-color-manager
+    # gnome-screenshot
+    # gnome-shell
+    # gnome-shell-extensions
+    # nautilus
+    # gnome-tweaks
     sudo systemctl enable gdm
     log -f 'GNOME installation'
 
     log -s 'zsh installation'
     install_packages zsh
-    curl -fsSL https://starship.rs/install.sh | sudo bash -s -- -f
+    # curl -fsSL https://starship.rs/install.sh | sudo bash -s -- -f
+    install_packages -a starship-bin
     sudo chsh -s "$(which zsh)" "$(whoami)"
     rm "$HOME/.bash"*
     log -f 'zsh installation'
@@ -364,8 +377,23 @@ install_post () {
     # telegram-desktop
     # vlc
     # transmission-gtk
+    # youtube-dl
+    # ffmpeg
+    # p7zip
     install_packages -a xcursor-openzone
     log -f 'additional packages installation'
+
+    log -s 'runtime configuration files cloning'
+    install_packages rsync
+    tempdir="$(mktemp -d)"
+    git clone https://gitlab.com/romanilin/rcs.git "$tempdir"
+    rm -rf "$tempdir/.git"
+    rm -rf "$tempdir/LICENSE"
+    rm -rf "$tempdir/README.md"
+    rsync -a "$tempdir/" "$HOME/"
+    envsubst '$USER,$HOST' <"$tempdir/.mozilla/firefox/default/user.js" >"$HOME/.mozilla/firefox/default/user.js"
+    rm -rf "$tempdir"
+    log -f 'runtime configuration files cloning'
 
     log -s 'GDM configuring'
     tempdir=$(mktemp -d)
@@ -380,20 +408,10 @@ install_post () {
     echo '</gresource></gresources>' >>"$tempdir/gnome-shell-theme.gresource.xml"
     sed -i -zE 's/(#lockDialogGroup \{)[^}]+/\1 background-color: #000000; /g' "$tempdir/org/gnome/shell/theme/gnome-shell.css"
     glib-compile-resources "$tempdir/gnome-shell-theme.gresource.xml"
-    # sudo cp -f /usr/share/gnome-shell/gnome-shell-theme.gresource /usr/share/gnome-shell/gnome-shell-theme.gresource.bak
     sudo cp -f "$tempdir/gnome-shell-theme.gresource" /usr/share/gnome-shell/
     cd - >/dev/null
     rm -rf "$tempdir"
     log -f 'GDM configuring'
-
-    log -s 'runtime configuration files cloning'
-    install_packages rsync
-    tempdir="$(mktemp -d)"
-    git clone https://gitlab.com/romanilin/rcs.git "$tempdir"
-    rsync -a "$tempdir/" "$HOME/"
-    rm -rf "$tempdir"
-    echo "user_pref(\"identity.fxaccounts.account.device.name\", \"$HOST\");" >"$HOME/.mozilla/firefox/default/user.js"
-    log -f 'runtime configuration files cloning'
 
     log -s 'GNOME configuring'
     # https://superuser.com/questions/1359253/how-to-remove-starred-tab-in-gnomes-nautilus
@@ -426,16 +444,17 @@ install_post () {
     other_apps=$(awk '{ print $0 }' RS='\n' ORS="', '" <<<$other_apps)
     other_apps=[\'${other_apps::-4}\']
 
-    local dconf_vars='$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_apps,$terminal_profile'
-    envsubst $dconf_vars <"$HOME/.config/dconf/dump.ini" | dconf load /
+    envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_apps,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
+    rm "$HOME/.config/dconf/dump.ini"
     log -f 'GNOME configuring'
 
-    log -s 'packages clearing up'
+    log -s 'pacman clearing up'
     orphans="$(pacman -Qtdq)"
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
     fi
-    log -f 'packages clearing up'
+    sudo pacman -Scc
+    log -f 'pacman clearing up'
 
     echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
 
