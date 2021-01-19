@@ -49,6 +49,7 @@ shift $((OPTIND-1))
 
 mirror_countries=Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine
 sudo=$([ "$EUID" == 0 ] || echo sudo)
+chroot=$([ "$mode" == 'post' ] || echo arch-chroot /mnt)
 
 
 setup_terminal_colors () {
@@ -165,6 +166,17 @@ install_packages () {
 }
 
 
+install_vbox_guest_utils () {
+    if [ "$vbox" == true ]; then
+        log -s 'VirtualBox guest utilities installation'
+        pacman -Q linux || $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-dkms
+        $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-utils
+        $chroot $sudo systemctl enable --now vboxservice
+        log -f 'VirtualBox guest utilities installation'
+    fi
+}
+
+
 install_base () {
     echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
 
@@ -240,10 +252,10 @@ install_base () {
 
     log -s 'system configuring'
     genfstab -U /mnt >>/mnt/etc/fstab
-    arch-chroot /mnt ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
-    arch-chroot /mnt hwclock --systohc
+    $chroot ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+    $chroot hwclock --systohc
     sed -i 's/^#\(\(en_US\|ru_RU\)\.UTF-8 UTF-8\)/\1/' /mnt/etc/locale.gen
-    arch-chroot /mnt locale-gen
+    $chroot locale-gen
     echo LANG=en_US.UTF-8 >/mnt/etc/locale.conf
     log -f 'system configuring'
 
@@ -252,24 +264,26 @@ install_base () {
     echo '127.0.0.1 localhost' >/mnt/etc/hosts
     echo '::1 localhost' >>/mnt/etc/hosts
     echo "127.0.1.1 $hostname.localdomain $hostname" >>/mnt/etc/hosts
-    arch-chroot /mnt pacman -S --noconfirm --needed networkmanager
-    arch-chroot /mnt systemctl enable NetworkManager
+    $chroot pacman -S --noconfirm --needed networkmanager
+    $chroot systemctl enable NetworkManager
     log -f 'network configuring'
 
     log -s 'users configuring'
-    arch-chroot /mnt sh -c "(echo '$root_password'; echo '$root_password') | passwd >/dev/null"
-    arch-chroot /mnt useradd --create-home --comment $user_fullname --groups wheel,audio $user_username
-    arch-chroot /mnt sh -c "(echo '$user_password'; echo '$user_password') | passwd $user_username >/dev/null"
-    arch-chroot /mnt pacman -S --noconfirm --needed sudo
+    $chroot sh -c "(echo '$root_password'; echo '$root_password') | passwd >/dev/null"
+    $chroot useradd --create-home --comment $user_fullname --groups wheel,audio $user_username
+    $chroot sh -c "(echo '$user_password'; echo '$user_password') | passwd $user_username >/dev/null"
+    $chroot pacman -S --noconfirm --needed sudo
     sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
     log -f 'users configuring'
 
+    install_vbox_guest_utils
+
     log -s 'boot loader installation and configuring'
-    arch-chroot /mnt pacman -S --noconfirm --needed grub efibootmgr
+    $chroot pacman -S --noconfirm --needed grub efibootmgr
     mkdir /mnt/boot/efi
     mount /dev/sda1 /mnt/boot/efi
-    arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
-    arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
+    $chroot grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+    $chroot grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'boot loader installation and configuring'
 
     log -s 'partitions unmounting'
@@ -284,6 +298,8 @@ install_base () {
 
 install_post () {
     echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
+
+    export XDG_CONFIG_HOME="$HOME/.config"
 
     log -s 'sudo timeout preventing'
     command -v sudo >/dev/null 2>&1 || {
@@ -340,9 +356,11 @@ install_post () {
 
     log -s 'zsh installation'
     install_packages zsh
-    # curl -fsSL https://starship.rs/install.sh | sudo bash -s -- -f
+    echo 'export XDG_CONFIG_HOME="$HOME/.config"' >/etc/zshenv
+    echo 'export ZDOTDIR="$XDG_CONFIG_HOME/zsh"' >>/etc/zshenv
     install_packages -a starship-bin
     sudo chsh -s "$(which zsh)" "$(whoami)"
+    export HISTFILE=/dev/null
     rm "$HOME/.bash"*
     log -f 'zsh installation'
 
@@ -363,7 +381,7 @@ install_post () {
     log -f 'ufw installation'
 
     log -s 'additional packages installation'
-    install_packages expect man tilix vim code
+    install_packages man vim tilix code
     # wget
     # nmap
     # imagemagick
@@ -389,6 +407,7 @@ install_post () {
     rm -rf "$tempdir/README.md"
     rsync -a "$tempdir/" "$HOME/"
     envsubst '$USER,$HOST' <"$tempdir/.mozilla/firefox/default/user.js" >"$HOME/.mozilla/firefox/default/user.js"
+    envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$HOME/.config/ssh/config"
     rm -rf "$tempdir"
     log -f 'runtime configuration files cloning'
 
@@ -445,12 +464,14 @@ install_post () {
     rm "$HOME/.config/dconf/dump.ini"
     log -f 'GNOME configuring'
 
+    install_vbox_guest_utils
+
     log -s 'pacman clearing up'
     orphans="$(pacman -Qtdq)"
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
     fi
-    sudo pacman -Scc
+    sudo pacman -Scc --noconfirm
     log -f 'pacman clearing up'
 
     echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
@@ -466,10 +487,4 @@ if [ "$mode" == 'post' ]; then
     install_post
 else
     install_base
-fi
-
-if [ "$vbox" == true ]; then
-    pacman -Q linux || install_packages virtualbox-guest-dkms
-    install_packages virtualbox-guest-utils
-    $sudo systemctl enable --now vboxservice
 fi
