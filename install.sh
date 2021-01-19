@@ -240,8 +240,7 @@ install_base () {
 
     log -s 'system configuring'
     genfstab -U /mnt >>/mnt/etc/fstab
-    # arch-chroot /mnt ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
-    ln --force --symbolic /mnt/usr/share/zoneinfo/Europe/Moscow /mnt/etc/localtime
+    arch-chroot /mnt ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
     arch-chroot /mnt hwclock --systohc
     sed -i 's/^#\(\(en_US\|ru_RU\)\.UTF-8 UTF-8\)/\1/' /mnt/etc/locale.gen
     arch-chroot /mnt locale-gen
@@ -268,8 +267,6 @@ install_base () {
     log -s 'boot loader installation and configuring'
     arch-chroot /mnt pacman -S --noconfirm --needed grub efibootmgr
     mkdir /mnt/boot/efi
-    # arch-chroot /mnt mount /dev/sda1 /boot/efi
-    # mount /mnt/dev/sda1 /mnt/boot/efi
     mount /dev/sda1 /mnt/boot/efi
     arch-chroot /mnt grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
     arch-chroot /mnt grub-mkconfig -o /boot/grub/grub.cfg
