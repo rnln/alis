@@ -28,7 +28,7 @@ for option in "$@"; do
 done
 
 lts=false
-mode=base
+mode='base'
 vbox=false
 xorg=false
 
@@ -47,7 +47,7 @@ shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
 
 
-mirror_countries=Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine
+mirror_countries='Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine'
 sudo=$([ "$EUID" == 0 ] || echo sudo)
 chroot=$([ "$mode" == 'post' ] || echo arch-chroot /mnt)
 
@@ -167,13 +167,9 @@ install_packages () {
 
 
 install_vbox_guest_utils () {
-    if [ "$vbox" == true ]; then
-        log -s 'VirtualBox guest utilities installation'
-        pacman -Q linux || $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-dkms
-        $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-utils
-        $chroot $sudo systemctl enable --now vboxservice
-        log -f 'VirtualBox guest utilities installation'
-    fi
+    $chroot sh -c "pacman -Q linux || $sudo pacman -S --noconfirm --needed virtualbox-guest-dkms"
+    $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-utils
+    $chroot $sudo systemctl enable --now vboxservice
 }
 
 
@@ -276,7 +272,11 @@ install_base () {
     sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
     log -f 'users configuring'
 
-    install_vbox_guest_utils
+    if [ "$vbox" == true ]; then
+        log -s 'VirtualBox guest utilities installation'
+        install_vbox_guest_utils
+        log -f 'VirtualBox guest utilities installation'
+    fi
 
     log -s 'boot loader installation and configuring'
     $chroot pacman -S --noconfirm --needed grub efibootmgr
@@ -290,9 +290,9 @@ install_base () {
     umount -R /mnt
     log -f 'partitions unmounting'
 
-    system_errors
+    echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
 
-    log -f installation
+    system_errors
 }
 
 
@@ -464,7 +464,11 @@ install_post () {
     rm "$HOME/.config/dconf/dump.ini"
     log -f 'GNOME configuring'
 
-    install_vbox_guest_utils
+    if [ "$vbox" == true ]; then
+        log -s 'VirtualBox guest utilities installation'
+        install_vbox_guest_utils
+        log -f 'VirtualBox guest utilities installation'
+    fi
 
     log -s 'pacman clearing up'
     orphans="$(pacman -Qtdq)"
