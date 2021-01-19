@@ -167,7 +167,7 @@ install_packages () {
 
 
 install_vbox_guest_utils () {
-    $chroot sh -c "pacman -Q linux || $sudo pacman -S --noconfirm --needed virtualbox-guest-dkms"
+    $chroot sh -c "pacman -Q linux 2>/dev/null || $sudo pacman -S --noconfirm --needed virtualbox-guest-dkms"
     $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-utils
     $chroot $sudo systemctl enable --now vboxservice
 }
