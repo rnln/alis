@@ -357,11 +357,10 @@ install_post () {
 
     log -s 'zsh installation'
     install_packages zsh
-    sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME/.config\"' >/etc/zshenv"
-    sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME/zsh\"' >>/etc/zshenv"
+    sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME/.config\"' >/etc/zsh/zshenv"
+    sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME/zsh\"' >>/etc/zsh/zshenv"
     install_packages -a starship-bin
     sudo chsh -s "$(which zsh)" "$(whoami)"
-    export HISTFILE=/dev/null
     rm "$HOME/.bash"*
     log -f 'zsh installation'
 
