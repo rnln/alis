@@ -237,7 +237,7 @@ install_base () {
     log -f 'file systems mounting'
 
     log -s 'essential packages installation'
-    reflector --latest 20 --sort rate -c '$mirror_countries' --protocol https >/etc/pacman.d/mirrorlist
+    reflector --latest 20 --sort rate -c "$mirror_countries" --protocol https >/etc/pacman.d/mirrorlist
     pacman -Syy
     pacstrap /mnt base linux-firmware
     if [ "$lts" == true ]; then
