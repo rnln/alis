@@ -160,7 +160,7 @@ revert_sudoers () {
 install_packages () {
     case $1 in
         -a) shift
-            yay -S --noconfirm --needed "$@" ;;
+            paru -S --noconfirm --needed "$@" ;;
         *) $sudo pacman -S --noconfirm --needed "$@"
     esac
 }
