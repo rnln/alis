@@ -237,7 +237,7 @@ install_base () {
     log -f 'file systems mounting'
 
     log -s 'essential packages installation'
-    reflector --latest 20 --sort rate -c $mirror_countries --protocol https >/etc/pacman.d/mirrorlist
+    reflector --latest 20 --sort rate -c '$mirror_countries' --protocol https >/etc/pacman.d/mirrorlist
     pacman -Syy
     pacstrap /mnt base linux-firmware
     if [ "$lts" == true ]; then
@@ -324,16 +324,16 @@ install_post () {
     log -s 'pacman configuring'
     sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
-    sudo sh -c "reflector --latest 20 --sort rate -c $mirror_countries --protocol https >/etc/pacman.d/mirrorlist"
+    sudo sh -c "reflector --latest 20 --sort rate -c '$mirror_countries' --protocol https >/etc/pacman.d/mirrorlist"
     log -f 'pacman configuring'
 
-    log -s 'yay installation'
+    log -s 'paru installation'
     install_packages base-devel git
     local tempdir="$(mktemp -d)"
-    git clone https://aur.archlinux.org/yay.git "$tempdir"
+    git clone https://aur.archlinux.org/paru-bin.git "$tempdir"
     sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
     rm -rf "$tempdir"
-    log -f 'yay installation'
+    log -f 'paru installation'
 
     log -s 'fonts installation'
     install_packages noto-fonts noto-fonts-emoji # noto-fonts-cjk
@@ -341,17 +341,7 @@ install_post () {
     log -f 'fonts installation'
 
     log -s 'GNOME installation'
-    install_packages gdm gnome-terminal gnome-control-center
-    # eog
-    # gnome-themes-extra
-    # gedit
-    # gnome-calculator
-    # gnome-color-manager
-    # gnome-screenshot
-    # gnome-shell
-    # gnome-shell-extensions
-    # nautilus
-    # gnome-tweaks
+    install_packages gdm gnome-terminal gnome-control-center nautilus gnome-themes-extra chrome-gnome-shell gnome-tweaks eog
     sudo systemctl enable gdm
     log -f 'GNOME installation'
 
@@ -381,20 +371,7 @@ install_post () {
     log -f 'ufw installation'
 
     log -s 'additional packages installation'
-    install_packages man vim tilix code
-    # wget
-    # nmap
-    # imagemagick
-    # python
-    # python-pip
-    # inetutils
-    # firefox
-    # telegram-desktop
-    # vlc
-    # transmission-gtk
-    # youtube-dl
-    # ffmpeg
-    # p7zip
+    install_packages man vim kitty code python-pip inetutils telegram-desktop python-nautilus virtualbox vlc transmission-gtk youtube-dl p7zip qalculate-gtk parcellite
     install_packages -a xcursor-openzone
     log -f 'additional packages installation'
 
@@ -406,8 +383,22 @@ install_post () {
     rm -rf "$tempdir/LICENSE"
     rm -rf "$tempdir/README.md"
     rsync -a "$tempdir/" "$HOME/"
-    envsubst '$USER,$HOST' <"$tempdir/.mozilla/firefox/default/user.js" >"$HOME/.mozilla/firefox/default/user.js"
-    envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$HOME/.config/ssh/config"
+    chmod 700 "$XDG_CONFIG_HOME/gnupg"
+    envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
+    # generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
+    addons_root="https://addons.mozilla.org/firefox"
+    addons_list=("copy-selected-tabs-to-clipboar" "decentraleyes" "default-bookmark-folder" "dont-touch-my-tabs" "facebook-container" "gnome-shell-integration" "https-everywhere" "image-search-options" "nano-defender-firefox" "noscript" "privacy-badger17" "privacy-possum" "tampermonkey" "greasemonkey" "ublock-origin" "wappalyzer" "darkvk" "uaswitcher")
+    xpi_list=()
+    echo "getting URIs of Firefox add-ons' xpi files"
+    for addon in "${addons_list[@]}"; do
+        echo "checking add-on \"$addon\""
+        xpi_url="$addons_root/downloads/file/$(curl -sL "$addons_root/addon/$addon" | grep -oP 'file/\K.+(?=">Download file)')"
+        xpi_url="$(curl -s -D - -o /dev/null "$xpi_url" | grep -oP 'Location:.+\Khttps.+(?=\?filehash)')"
+        xpi_list+=("\\\"$xpi_url\\\"")
+    done
+    xpi_list=`printf ',%s' "${xpi_list[@]}" | cut -c 2-`
+    export xpi_list
+    envsubst '$USER,$HOST,$xpi_list' <"$tempdir/.mozilla/firefox/default/user.js" >"$HOME/.mozilla/firefox/default/user.js"
     rm -rf "$tempdir"
     log -f 'runtime configuration files cloning'
 
@@ -442,14 +433,17 @@ install_post () {
     sudo sed -i '/DBusActivatable/d' /usr/share/applications/com.gexperts.Tilix.desktop
 
     not_to_hide_apps=(
+        "chromium"
+        "clipit"
         "code-oss"
-        "com.gexperts.Tilix"
-        "firefox"
         "gnome-control-center"
-        "google-chrome"
+        "kitty"
+        "librewolf"
+        "org.gnome.eog"
         "org.gnome.Nautilus"
         "org.gnome.Terminal"
         "org.gnome.tweaks"
+        "qalculate-gtk"
         "telegramdesktop"
         "transmission-gtk"
         "vlc"
