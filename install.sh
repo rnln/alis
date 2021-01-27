@@ -387,12 +387,31 @@ install_post () {
     envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
     # generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
     addons_root="https://addons.mozilla.org/firefox"
-    addons_list=("copy-selected-tabs-to-clipboar" "decentraleyes" "default-bookmark-folder" "dont-touch-my-tabs" "facebook-container" "gnome-shell-integration" "https-everywhere" "image-search-options" "nano-defender-firefox" "noscript" "privacy-badger17" "privacy-possum" "tampermonkey" "greasemonkey" "ublock-origin" "wappalyzer" "darkvk" "uaswitcher")
+    addons_list=(
+        "copy-selected-tabs-to-clipboar"
+        "decentraleyes"
+        "default-bookmark-folder"
+        "dont-touch-my-tabs"
+        "facebook-container"
+        "gnome-shell-integration"
+        "https-everywhere"
+        "image-search-options"
+        "nano-defender-firefox"
+        "noscript"
+        "privacy-badger17"
+        "privacy-possum"
+        "tampermonkey"
+        "greasemonkey"
+        "ublock-origin"
+        "wappalyzer"
+        "darkvk"
+        "uaswitcher"
+    )
     xpi_list=()
     echo "getting URIs of Firefox add-ons' xpi files"
     for addon in "${addons_list[@]}"; do
         echo "checking add-on \"$addon\""
-        xpi_url="$addons_root/downloads/file/$(curl -sL "$addons_root/addon/$addon" | grep -oP 'file/\K.+(?=">Download file)')"
+        xpi_url="$addons_root/downloads/file/$(curl -sL "$addons_root/addon/$addon" | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
         xpi_url="$(curl -s -D - -o /dev/null "$xpi_url" | grep -oP 'Location:.+\Khttps.+(?=\?filehash)')"
         xpi_list+=("\\\"$xpi_url\\\"")
     done
