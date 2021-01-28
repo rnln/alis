@@ -371,8 +371,8 @@ install_post () {
     log -f 'ufw installation'
 
     log -s 'additional packages installation'
-    install_packages man vim kitty code python-pip inetutils telegram-desktop python-nautilus virtualbox vlc transmission-gtk youtube-dl p7zip qalculate-gtk parcellite
-    install_packages -a xcursor-openzone
+    install_packages man vim kitty code python-pip inetutils telegram-desktop virtualbox vlc transmission-gtk youtube-dl p7zip qalculate-gtk
+    install_packages -a librewolf-bin xcursor-openzone
     log -f 'additional packages installation'
 
     log -s 'runtime configuration files cloning'
@@ -447,25 +447,17 @@ install_post () {
     fi
 
     export terminal_profile="$(uuidgen)"
-    sudo sed -i 's/^Exec=gnome-terminal/& --maximize/' /usr/share/applications/org.gnome.Terminal.desktop
-    sudo sed -i 's/^Exec=tilix$/& --maximize/' /usr/share/applications/com.gexperts.Tilix.desktop
-    sudo sed -i '/DBusActivatable/d' /usr/share/applications/com.gexperts.Tilix.desktop
 
     not_to_hide_apps=(
         "chromium"
-        "clipit"
         "code-oss"
-        "gnome-control-center"
         "kitty"
         "librewolf"
-        "org.gnome.eog"
         "org.gnome.Nautilus"
-        "org.gnome.Terminal"
-        "org.gnome.tweaks"
         "qalculate-gtk"
         "telegramdesktop"
         "transmission-gtk"
-        "vlc"
+        "virtualbox"
     )
     not_to_hide_apps=`printf '\|%s' "${not_to_hide_apps[@]}" | cut -c 3-` # join with "\|"
     export other_apps=$(ls -A1 /usr/share/applications | grep .desktop$)
@@ -474,6 +466,7 @@ install_post () {
     other_apps=[\'${other_apps::-4}\']
 
     envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_apps,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
+    envsubst '$other_apps' <dump.ini | dconf load /
     rm "$HOME/.config/dconf/dump.ini"
     log -f 'GNOME configuring'
 
