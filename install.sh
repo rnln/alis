@@ -417,7 +417,7 @@ install_post () {
     done
     xpi_list=`printf ',%s' "${xpi_list[@]}" | cut -c 2-`
     export xpi_list
-    envsubst '$USER,$HOST,$xpi_list' <"$tempdir/.mozilla/firefox/default/user.js" >"$HOME/.mozilla/firefox/default/user.js"
+    envsubst '$USER,$HOST,$xpi_list' <"$tempdir/.librewolf/default/user.js" >"$HOME/.librewolf/default/user.js"
     rm -rf "$tempdir"
     log -f 'runtime configuration files cloning'
 
