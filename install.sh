@@ -1,10 +1,10 @@
 #!/bin/sh
 # Run script via curl:
 #   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
-# Arguments:
+# Supported arguments:
 #   -l, --lts   Install linux-lts package instead of linux
 #   -p, --post  Start post-installation (grub, swapiness, pacman configuring, GNOME installation, etc.)
-#               By deafult script starts base Arch Linux installation with NetworkManager
+#               By deafult script starts Arch Linux base installation with NetworkManager
 #   -v, --vbox  Install VirtualBox guest utilities
 #   -x, --xorg  Configure GNOME to use only Xorg and disable Wayland
 # Example:
@@ -71,7 +71,8 @@ setup_terminal_colors () {
 
 log () {
     # log function
-    # -f        set "Finished" as status message (default is "Started")
+    # -s        print "Started..." message
+    # -f        print "Finished..." message
     # -d DEPTH  add indent in message beggining
 
     local OPTIND=1
