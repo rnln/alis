@@ -337,26 +337,24 @@ install_post () {
     log -f 'paru installation'
 
     log -s 'fonts installation'
-    install_packages noto-fonts noto-fonts-emoji # noto-fonts-cjk
-    install_packages ttf-jetbrains-mono
+    install_packages -a ttf-jetbrains-mono noto-fonts noto-fonts-emoji # noto-fonts-cjk
     log -f 'fonts installation'
 
     log -s 'GNOME installation'
-    install_packages gdm gnome-terminal gnome-control-center nautilus gnome-themes-extra chrome-gnome-shell gnome-tweaks eog
+    install_packages -a gdm gnome-terminal gnome-control-center nautilus gnome-themes-extra chrome-gnome-shell gnome-tweaks eog
     sudo systemctl enable gdm
     log -f 'GNOME installation'
 
     log -s 'zsh installation'
-    install_packages zsh
+    install_packages -a zsh starship-bin
     sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME/.config\"' >/etc/zsh/zshenv"
     sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME/zsh\"' >>/etc/zsh/zshenv"
-    install_packages -a starship-bin
     sudo chsh -s "$(which zsh)" "$(whoami)"
     rm "$HOME/.bash"*
     log -f 'zsh installation'
 
     log -s 'OpenSSH installation'
-    install_packages openssh
+    install_packages -a openssh
     sudo sh -c 'echo "DisableForwarding yes # disable all forwarding features (overrides all other forwarding-related options)" >>/etc/ssh/sshd_config'
     sudo sed -i 's/^#\(IgnoreRhosts\).*/\1 yes/' /etc/ssh/sshd_config
     # sudo sed -i 's/^#\(PasswordAuthentication\).*/\1 no/' /etc/ssh/sshd_config
@@ -365,19 +363,35 @@ install_post () {
     log -f 'OpenSSH installation'
 
     log -s 'ufw installation'
-    install_packages ufw
+    install_packages -a ufw
     sudo ufw limit ssh
     sudo ufw allow transmission
     sudo systemctl enable ufw
     log -f 'ufw installation'
 
     log -s 'additional packages installation'
-    install_packages man vim kitty code python-pip inetutils telegram-desktop virtualbox vlc transmission-gtk youtube-dl p7zip qalculate-gtk
-    install_packages -a librewolf-bin xcursor-openzone
+    additional_packages=(
+        "code"
+        "inetutils"
+        "kitty"
+        "librewolf-bin"
+        "man"
+        "p7zip"
+        "python-pip"
+        "qalculate-gtk"
+        "telegram-desktop"
+        "transmission-gtk"
+        "vim"
+        "virtualbox"
+        "vlc"
+        "xcursor-openzone"
+        "youtube-dl"
+    )
+    install_packages -a "${additional_packages[@]}"
     log -f 'additional packages installation'
 
     log -s 'runtime configuration files cloning'
-    install_packages rsync
+    install_packages -a rsync
     tempdir="$(mktemp -d)"
     git clone https://gitlab.com/romanilin/rcs.git "$tempdir"
     rm -rf "$tempdir/.git"
@@ -386,6 +400,7 @@ install_post () {
     rsync -a "$tempdir/" "$HOME/"
     chmod 700 "$XDG_CONFIG_HOME/gnupg"
     envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
+    envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/paru/paru.conf" >"$XDG_CONFIG_HOME/paru/paru.conf"
     # generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
     addons_root="https://addons.mozilla.org/firefox"
     addons_list=(
