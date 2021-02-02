@@ -87,7 +87,7 @@ log () {
     local NEWLINE='\n'
     local END='.'
 
-    while getopts 'd:e:fnsw:' option; do
+    while getopts 'i:e:fnsw:' option; do
         case "$option" in
             i) DEPTH=$OPTARG ;;
             e) END="${OPTARG}" ;;
