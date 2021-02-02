@@ -1,14 +1,15 @@
 #!/bin/sh
 # Run script via curl:
-#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
+#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)"
 # Supported arguments:
-#   -l, --lts   Install linux-lts package instead of linux
-#   -p, --post  Start post-installation (grub, swapiness, pacman configuring, GNOME installation, etc.)
-#               By deafult script starts Arch Linux base installation with NetworkManager
-#   -v, --vbox  Install VirtualBox guest utilities
-#   -x, --xorg  Configure GNOME to use only Xorg and disable Wayland
+#   -l, --lts    Install linux-lts package instead of linux
+#   -p, --post   Start post-installation (grub, swapiness, pacman configuring, GNOME installation, etc.)
+#                By deafult script starts Arch Linux base installation with NetworkManager
+#   -v, --vbox   Install VirtualBox guest utilities
+#   -x, --xorg   Configure GNOME to use only Xorg and disable Wayland
+#   -d, --drive  Drive name to install Arch Linux, /dev/sda by default
 # Example:
-#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)" '' --post --xorg
+#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)" '' -px
 
 set -e
 
@@ -23,23 +24,27 @@ for option in "$@"; do
             set -- "$@" '-v' ;;
         '--xorg')
             set -- "$@" '-x' ;;
+        '--drive')
+            set -- "$@" '-d' ;;
         *)  set -- "$@" "$option"
     esac
 done
 
-lts=false
-mode='base'
-vbox=false
-xorg=false
+LTS=false
+MODE='base'
+VBOX=false
+XORG=false
+DRIVE='/dev/sda'
 
 OPTIND=1
 
-while getopts 'lpvx' option; do
+while getopts 'd:lpvx' option; do
     case "$option" in
-        l) lts=true ;;
-        p) mode='post' ;;
-        v) vbox=true ;;
-        x) xorg=true
+        d) DRIVE="$OPTARG" ;;
+        l) LTS=true ;;
+        p) MODE='post' ;;
+        v) VBOX=true ;;
+        x) XORG=true
     esac
 done
 
@@ -47,106 +52,108 @@ shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
 
 
-mirror_countries='Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine'
-sudo=$([ "$EUID" == 0 ] || echo sudo)
-chroot=$([ "$mode" == 'post' ] || echo arch-chroot /mnt)
+MIRROR_COUNTRIES='Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine'
+SUDO=$([ "$EUID" == 0 ] || echo sudo)
+CHROOT=$([ "$MODE" == 'post' ] || echo arch-chroot /mnt)
 
 
 setup_terminal_colors () {
-    # only use colors if connected to a terminal
-    if [ -t 1 ]; then
-        ES_BLACK=`tput setaf 0`
-        ES_RED=`tput setaf 1`
-        ES_GREEN=`tput setaf 2`
-        ES_YELLOW=`tput setaf 3`
-        ES_BLUE=`tput setaf 4`
-        ES_MAGENTA=`tput setaf 5`
-        ES_CYAN=`tput setaf 6`
-        ES_WHITE=`tput setaf 7`
-        ES_BOLD=`tput bold`
-        ES_RESET=`tput sgr0`
-    fi
+    ES_BLACK=`tput setaf 0`
+    ES_RED=`tput setaf 1`
+    ES_GREEN=`tput setaf 2`
+    ES_YELLOW=`tput setaf 3`
+    ES_BLUE=`tput setaf 4`
+    ES_MAGENTA=`tput setaf 5`
+    ES_CYAN=`tput setaf 6`
+    ES_WHITE=`tput setaf 7`
+    ES_BOLD=`tput bold`
+    ES_RESET=`tput sgr0`
 }
 
 
 log () {
     # log function
-    # -s        print "Started..." message
-    # -f        print "Finished..." message
-    # -d DEPTH  add indent in message beggining
+    # -i DEPTH  Add indent in message beggining
+    # -s        Print "Started..." message
+    # -f        Print "Finished..." message
+    # -n        Prevent line break
+    # -e        End message with provided string, '.' by default
+    # -w        Wrap message with provided escape sequence
 
     local OPTIND=1
-    local depth=0
-    local error=false
-    local format="${ES_BOLD}"
-    local padding=''
+    local DEPTH=0
+    local FORMAT="${ES_BOLD}"
+    local PADDING=''
+    local NEWLINE='\n'
+    local END='.'
 
-    while getopts 'd:efs' option; do
+    while getopts 'd:e:fnsw:' option; do
         case "$option" in
-            d) depth=$OPTARG ;;
-            e) error=true
-               format="${format}${ES_RED}"
-               ;;
-            f) status='Finished ' ;;
-            s) status='Started ' ;;
+            d) DEPTH=$OPTARG ;;
+            e) END="${OPTARG}" ;;
+            w) FORMAT="${FORMAT}${OPTARG}" ;;
+            f) STATUS='Finished ' ;;
+            s) STATUS='Started ' ;;
+            n) NEWLINE='' ;;
         esac
     done
 
     shift $((OPTIND-1))
     [ "${1:-}" = '--' ] && shift
 
-    if [ $depth -gt 0 ]; then
-        padding=$(printf "=%.0s" `seq $(($depth * 4 - 2))`)
-        padding="${ES_CYAN}$padding>${ES_RESET} "
+    if [ $DEPTH -gt 0 ]; then
+        PADDING=$(printf "=%.0s" `seq $(($DEPTH * 4 - 2))`)
+        PADDING="${ES_CYAN}${PADDING}>${ES_RESET} "
     fi
 
-    echo -e "$padding$status${format}$@${ES_RESET}." >&2
+    printf "${ES_BOLD}${ES_CYAN}[ALRC]${ES_RESET} ${PADDING}${STATUS}${FORMAT}$@${ES_RESET}${END}${NEWLINE}" >&2
 }
 
 
 setup_color_scheme () {
-    BLACK='#121212'
-    RED='#ff714f'
-    GREEN='#00d965'
-    YELLOW='#e0e000'
-    BLUE='#7e9df9'
-    MAGENTA='#ff5de1'
-    CYAN='#90cbdb'
-    WHITE='#ffffff'
+    export BLACK='#121212'
+    export RED='#ff714f'
+    export GREEN='#00d965'
+    export YELLOW='#e0e000'
+    export BLUE='#7e9df9'
+    export MAGENTA='#ff5de1'
+    export CYAN='#90cbdb'
+    export WHITE='#ffffff'
 
-    BLACK_BRIGHT='#555555'
-    RED_BRIGHT=$RED
-    GREEN_BRIGHT=$GREEN
-    YELLOW_BRIGHT=$YELLOW
-    BLUE_BRIGHT=$BLUE
-    MAGENTA_BRIGHT=$MAGENTA
-    CYAN_BRIGHT=$CYAN
-    WHITE_BRIGHT=$WHITE
+    export BLACK_BRIGHT='#555555'
+    export RED_BRIGHT=$RED
+    export GREEN_BRIGHT=$GREEN
+    export YELLOW_BRIGHT=$YELLOW
+    export BLUE_BRIGHT=$BLUE
+    export MAGENTA_BRIGHT=$MAGENTA
+    export CYAN_BRIGHT=$CYAN
+    export WHITE_BRIGHT=$WHITE
 
     export FOREGROUND=$WHITE
     export BACKGROUND=$BLACK
-    export BACKGROUND_HIGHLIGHT='#1f4871' #3298ff66
+    export BACKGROUND_HIGHLIGHT='#1f4871' # #3298ff66 on #121212 background
     export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
 }
 
 
-system_errors () {
-    echo -e "${ES_BOLD}System errors information${ES_RESET}."
-    echo -e "${ES_BOLD}${ES_CYAN}systemctl --failed${ES_RESET}:"
-    PAGER= $sudo systemctl --failed
-    echo -e "${ES_BOLD}${ES_CYAN}journalctl -p 3 -xb${ES_RESET}:"
-    PAGER= $sudo journalctl -p 3 -xb
+check_system_errors () {
+    log 'System errors information'
+    log -i 1 'systemctl --failed:'
+    PAGER= $SUDO systemctl --failed
+    log -i 1 'journalctl -p 3 -xb:'
+    PAGER= $SUDO journalctl -p 3 -xb
 
     while true; do
-        read -e -p "Clear these logs? [Y/n] " yn
-        case $yn in
+        log -i 1 -n 'Clear these logs? [Y/n] '
+        read -e answer
+        case $answer in
             [Nn]*) break ;;
             [Yy]*|'')
-                $sudo systemctl reset-failed
-                $sudo journalctl --vacuum-time=1s
+                $SUDO systemctl reset-failed
+                $SUDO journalctl --vacuum-time=1s
                 break
                 ;;
-            *) echo 'Try again.'
+            *) log -i 1 'Try again.'
         esac
     done
 }
@@ -162,51 +169,58 @@ install_packages () {
     case $1 in
         -a) shift
             paru -S --noconfirm --needed "$@" ;;
-        *) $sudo pacman -S --noconfirm --needed "$@"
+        *) $SUDO pacman -S --noconfirm --needed "$@"
     esac
 }
 
 
 install_vbox_guest_utils () {
-    $chroot sh -c "pacman -Q linux 2>/dev/null || $sudo pacman -S --noconfirm --needed virtualbox-guest-dkms"
-    $chroot $sudo pacman -S --noconfirm --needed virtualbox-guest-utils
-    $chroot $sudo systemctl enable vboxservice
-    if [ "$mode" == 'post' ]; then $sudo systemctl start vboxservice; fi
+    $CHROOT sh -c "pacman -Q linux 2>/dev/null || $SUDO pacman -S --noconfirm --needed virtualbox-guest-dkms"
+    $CHROOT $SUDO pacman -S --noconfirm --needed virtualbox-guest-utils
+    $CHROOT $SUDO systemctl enable vboxservice
+    if [ "$MODE" == 'post' ]; then $SUDO systemctl start vboxservice; fi
 }
 
 
 install_base () {
-    echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
+    log -s -w "${ES_GREEN}" 'Arch Linux base installation'
 
     log -s 'getting user data'
-    read -p "(1/7) Hostname [host]: " hostname
-    hostname=${hostname:-host}
+    log -n -i 1 -e ': ' '(1/7) Hostname [host]'
+    read HOSTNAME
+    HOSTNAME=${HOSTNAME:-host}
     while true; do
-        read -s -p "(2/7) Root password [root]: " root_password
+        log -n -i 1 -e ': ' '(2/7) Root password [root]'
+        read -s ROOT_PASSWORD
         echo
-        read -s -p "(3/7) Retype root password [root]: " root_password_check
+        log -n -i 1 -e ': ' '(3/7) Retype root password [root]'
+        read -s ROOT_PASSWORD_CHECK
         echo
-        if [ "$root_password" == "$root_password_check" ]; then
+        if [ "$ROOT_PASSWORD" == "$ROOT_PASSWORD_CHECK" ]; then
             break
         fi
-        echo "Password, try again"
+        log -i 1 -w "${ES_RED}" 'Passwords do not match, try again'
     done
-    root_password=${root_password:-root}
-    read -p "(4/7) User full name [User]: " user_fullname
-    user_fullname=${user_fullname:-User}
-    read -p "(5/7) Username [user]: " user_username
-    user_username=${user_username:-user}
+    ROOT_PASSWORD=${ROOT_PASSWORD:-root}
+    log -n -i 1 -e ': ' '(4/7) User full name [User]'
+    read -p USER_FULLNAME
+    USER_FULLNAME=${USER_FULLNAME:-User}
+    log -n -i 1 -e ': ' '(5/7) Username [user]'
+    read -p USER_USERNAME
+    USER_USERNAME=${USER_USERNAME:-user}
     while true; do
-        read -s -p "(6/7) User password [user]: " user_password
+        log -n -i 1 -e ': ' '(6/7) User password [user]'
+        read -s USER_PASSWORD
         echo
-        read -s -p "(7/7) Retype user password [user]: " user_password_check
+        log -n -i 1 -e ': ' '(7/7) Retype user password [user]'
+        read -s USER_PASSWORD_CHECK
         echo
-        if [ "$user_password" == "$user_password_check" ]; then
+        if [ "$USER_PASSWORD" == "$USER_PASSWORD_CHECK" ]; then
             break
         fi
-        echo "Password, try again"
+        log -i 1 -w "${ES_RED}" 'Passwords do not match, try again'
     done
-    user_password=${user_password:-user}
+    USER_PASSWORD=${USER_PASSWORD:-user}
     log -f 'getting user data'
 
     log -s 'system clock synchronizing'
@@ -214,15 +228,14 @@ install_base () {
     log -f 'system clock synchronizing'
 
     log -s 'partitioning'
-    sector_size=512
-    swap_sectors=$((`free -b | awk '/Mem/ {print $2}'` / $sector_size))
-    sfdisk --list
+    SECTOR_SIZE=512
+    SWAP_SECTORS=$((`free -b | awk '/Mem/ {print $2}'` / $SECTOR_SIZE))
     echo "
         label: gpt
-        sector-size: $sector_size
-        /dev/sda1: type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=532480
-        /dev/sda2: type=0657FD6D-A4AB-43C4-84E5-0933C84B4F4F, size=$swap_sectors
-        /dev/sda3: type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+        sector-size: $SECTOR_SIZE
+        ${DRIVE}1: type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=532480
+        ${DRIVE}2: type=0657FD6D-A4AB-43C4-84E5-0933C84B4F4F, size=$SWAP_SECTORS
+        ${DRIVE}3: type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
     " | sfdisk /dev/sda
     log -f 'partitioning'
 
@@ -238,10 +251,10 @@ install_base () {
     log -f 'file systems mounting'
 
     log -s 'essential packages installation'
-    reflector --latest 20 --sort rate -c "$mirror_countries" --protocol https >/etc/pacman.d/mirrorlist
+    reflector --latest 20 --sort rate -c "$MIRROR_COUNTRIES" --protocol https >/etc/pacman.d/mirrorlist
     pacman -Syy
     pacstrap /mnt base linux-firmware
-    if [ "$lts" == true ]; then
+    if [ "$LTS" == true ]; then
         pacstrap /mnt linux-lts # linux-lts-headers
     else
         pacstrap /mnt linux
@@ -250,51 +263,55 @@ install_base () {
 
     log -s 'system configuring'
     genfstab -U /mnt >>/mnt/etc/fstab
-    $chroot ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
-    $chroot hwclock --systohc
+    $CHROOT ln --force --symbolic /usr/share/zoneinfo/Europe/Moscow /etc/localtime
+    $CHROOT hwclock --systohc
     sed -i 's/^#\(\(en_US\|ru_RU\)\.UTF-8 UTF-8\)/\1/' /mnt/etc/locale.gen
-    $chroot locale-gen
+    $CHROOT locale-gen
     echo LANG=en_US.UTF-8 >/mnt/etc/locale.conf
     log -f 'system configuring'
 
     log -s 'network configuring'
-    echo "$hostname" >/mnt/etc/hostname
+    echo "$HOSTNAME" >/mnt/etc/hostname
     echo '127.0.0.1 localhost' >/mnt/etc/hosts
     echo '::1 localhost' >>/mnt/etc/hosts
-    echo "127.0.1.1 $hostname.localdomain $hostname" >>/mnt/etc/hosts
-    $chroot pacman -S --noconfirm --needed networkmanager
-    $chroot systemctl enable NetworkManager
+    echo "127.0.1.1 $HOSTNAME.localdomain $HOSTNAME" >>/mnt/etc/hosts
+    $CHROOT pacman -S --noconfirm --needed networkmanager
+    $CHROOT systemctl enable NetworkManager
     log -f 'network configuring'
 
     log -s 'users configuring'
-    $chroot sh -c "(echo '$root_password'; echo '$root_password') | passwd >/dev/null"
-    $chroot useradd --create-home --comment $user_fullname --groups wheel,audio $user_username
-    $chroot sh -c "(echo '$user_password'; echo '$user_password') | passwd $user_username >/dev/null"
-    $chroot pacman -S --noconfirm --needed sudo
+    # PASSWORD=$(/usr/bin/openssl passwd -crypt 'vagrant')
+    # /usr/bin/usermod --password ${PASSWORD} root
+    # /usr/bin/useradd --password ${PASSWORD} --comment 'Vagrant User' --create-home --gid users --groups vagrant,vboxsf vagrant
+
+    $CHROOT sh -c "(echo '$ROOT_PASSWORD'; echo '$ROOT_PASSWORD') | passwd >/dev/null"
+    $CHROOT useradd --create-home --comment $USER_FULLNAME --groups wheel,audio $USER_USERNAME
+    $CHROOT sh -c "(echo '$USER_PASSWORD'; echo '$USER_PASSWORD') | passwd $USER_USERNAME >/dev/null"
+    $CHROOT pacman -S --noconfirm --needed sudo
     sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
     log -f 'users configuring'
 
-    if [ "$vbox" == true ]; then
+    if [ "$VBOX" == true ]; then
         log -s 'VirtualBox guest utilities installation'
         install_vbox_guest_utils
         log -f 'VirtualBox guest utilities installation'
     fi
 
     log -s 'boot loader installation and configuring'
-    $chroot pacman -S --noconfirm --needed grub efibootmgr
+    $CHROOT pacman -S --noconfirm --needed grub efibootmgr
     mkdir /mnt/boot/efi
     mount /dev/sda1 /mnt/boot/efi
-    $chroot grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
-    $chroot grub-mkconfig -o /boot/grub/grub.cfg
+    $CHROOT grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+    $CHROOT grub-mkconfig -o /boot/grub/grub.cfg
     log -f 'boot loader installation and configuring'
 
     log -s 'partitions unmounting'
     umount -R /mnt
     log -f 'partitions unmounting'
 
-    echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux base installation${ES_RESET}."
+    log -f -w "${ES_GREEN}" 'Arch Linux base installation'
 
-    system_errors
+    check_system_errors
 }
 
 
@@ -305,7 +322,7 @@ install_post () {
 
     log -s 'sudo timeout preventing'
     command -v sudo >/dev/null 2>&1 || {
-        log -e "sudo isn't installed"
+        log -w "${ES_RED}" "sudo isn't installed"
         exit 1
     }
     trap revert_sudoers EXIT SIGHUP SIGINT SIGTERM
@@ -325,7 +342,7 @@ install_post () {
     log -s 'pacman configuring'
     sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
-    sudo sh -c "reflector --latest 20 --sort rate -c '$mirror_countries' --protocol https >/etc/pacman.d/mirrorlist"
+    sudo sh -c "reflector --latest 20 --sort rate -c '$MIRROR_COUNTRIES' --protocol https >/etc/pacman.d/mirrorlist"
     log -f 'pacman configuring'
 
     log -s 'paru installation'
@@ -382,12 +399,14 @@ install_post () {
         "telegram-desktop"
         "transmission-gtk"
         "vim"
-        "virtualbox"
         "vlc"
         "xcursor-openzone"
         "youtube-dl"
     )
     install_packages -a "${additional_packages[@]}"
+    if [ "$VBOX" == true ]; then
+        install_packages virtualbox
+    fi
     log -f 'additional packages installation'
 
     log -s 'runtime configuration files cloning'
@@ -401,27 +420,33 @@ install_post () {
     chmod 700 "$XDG_CONFIG_HOME/gnupg"
     envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
     envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/paru/paru.conf" >"$XDG_CONFIG_HOME/paru/paru.conf"
+    sudo mkdir /usr/lib/electron9/bin
+    sudo ln /usr/bin/code-oss /usr/lib/electron9/bin/code-oss
     # generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
     addons_root="https://addons.mozilla.org/firefox"
     addons_list=(
-        "copy-selected-tabs-to-clipboar"
-        "decentraleyes"
-        "default-bookmark-folder"
-        "dont-touch-my-tabs"
-        "facebook-container"
-        "gnome-shell-integration"
-        "https-everywhere"
-        "image-search-options"
-        "nano-defender-firefox"
-        "noscript"
-        "privacy-badger17"
-        "privacy-possum"
-        "tampermonkey"
-        "greasemonkey"
-        "ublock-origin"
-        "wappalyzer"
-        "darkvk"
-        "uaswitcher"
+        # https://addons.mozilla.org/addon/${addon}/
+        'copy-selected-tabs-to-clipboar'
+        'darkvk'
+        'default-bookmark-folder'
+        'gnome-shell-integration'
+        'image-search-options'
+        'tampermonkey'
+        'wappalyzer'
+        # Privacy
+        'decentraleyes'
+        'dont-touch-my-tabs'
+        'dont-track-me-google1'
+        'facebook-container'
+        'google-container'
+        'nano-defender-firefox'
+        'nohttp' # 'https-everywhere'
+        'noscript'
+        'privacy-badger17'
+        'privacy-possum'
+        'smart-referer'
+        'uaswitcher'
+        'ublock-origin'
     )
     xpi_list=()
     echo "getting URIs of Firefox add-ons' xpi files"
@@ -458,7 +483,7 @@ install_post () {
     log -s 'GNOME configuring'
     # https://superuser.com/questions/1359253/how-to-remove-starred-tab-in-gnomes-nautilus
 
-    if [ "$xorg" == true ]; then
+    if [ "$XORG" == true ]; then
         sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
     fi
 
@@ -485,7 +510,7 @@ install_post () {
     rm "$HOME/.config/dconf/dump.ini"
     log -f 'GNOME configuring'
 
-    if [ "$vbox" == true ]; then
+    if [ "$VBOX" == true ]; then
         log -s 'VirtualBox guest utilities installation'
         install_vbox_guest_utils
         log -f 'VirtualBox guest utilities installation'
@@ -495,19 +520,20 @@ install_post () {
     orphans="$(pacman -Qtdq)"
     if [[ -n "$orphans" ]]; then
         sudo pacman -Rns --noconfirm $orphans
+        # sudo pacman -Rcns --noconfirm $orphans
     fi
     sudo pacman -Scc --noconfirm
     log -f 'pacman clearing up'
 
     echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
 
-    system_errors
+    check_system_errors
 }
 
 
 setup_terminal_colors
 
-if [ "$mode" == 'post' ]; then
+if [ "$MODE" == 'post' ]; then
     setup_color_scheme
     install_post
 else

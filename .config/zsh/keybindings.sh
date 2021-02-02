@@ -1,6 +1,6 @@
 bindkey -e
 
-bindkey '^[m' copy-prev-shell-word # [Esc-m] copy previous shell word
+bindkey '^[d' copy-prev-shell-word # [Esc-m] copy previous shell word
 bindkey -s '^[b' '.bak' # [Esc-b] insert '.bak'
 bindkey ' ' magic-space # [Space] - don't do history expansion
 
