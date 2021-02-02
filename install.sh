@@ -58,24 +58,27 @@ CHROOT=$([ "$MODE" == 'post' ] || echo arch-chroot /mnt)
 
 
 setup_terminal_colors () {
-    ES_BLACK=`tput setaf 0`
-    ES_RED=`tput setaf 1`
-    ES_GREEN=`tput setaf 2`
-    ES_YELLOW=`tput setaf 3`
-    ES_BLUE=`tput setaf 4`
-    ES_MAGENTA=`tput setaf 5`
-    ES_CYAN=`tput setaf 6`
-    ES_WHITE=`tput setaf 7`
-    ES_BOLD=`tput bold`
-    ES_RESET=`tput sgr0`
+    # only use colors if connected to a terminal
+    if [ -t 1 ]; then
+        ES_BLACK=`tput setaf 0`
+        ES_RED=`tput setaf 1`
+        ES_GREEN=`tput setaf 2`
+        ES_YELLOW=`tput setaf 3`
+        ES_BLUE=`tput setaf 4`
+        ES_MAGENTA=`tput setaf 5`
+        ES_CYAN=`tput setaf 6`
+        ES_WHITE=`tput setaf 7`
+        ES_BOLD=`tput bold`
+        ES_RESET=`tput sgr0`
+    fi
 }
 
 
 log () {
     # log function
     # -i DEPTH  Add indent in message beggining
-    # -s        Print "Started..." message
-    # -f        Print "Finished..." message
+    # -s        Print "Started ..." message
+    # -f        Print "Finished ..." message
     # -n        Prevent line break
     # -e        End message with provided string, '.' by default
     # -w        Wrap message with provided escape sequence
@@ -324,6 +327,7 @@ install_post () {
     log -s -w "${ES_CYAN}" 'Arch Linux post-installation'
 
     export XDG_CONFIG_HOME="$HOME/.config"
+    export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 
     log -s 'sudo timeout preventing'
     command -v sudo >/dev/null 2>&1 || {
@@ -461,7 +465,7 @@ install_post () {
     xpi_list=()
     log -s -i 1 "getting URIs of Firefox add-ons' xpi files"
     for addon in "${addons_list[@]}"; do
-        log -i 2 -e '...' "checking add-on \"$addon\""
+        log -i 2 -w "${ES_RESET}" -e '...' "checking add-on \"$addon\""
         xpi_url="$addons_root/downloads/file/$(curl -sL "$addons_root/addon/$addon" | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
         xpi_url="$(curl -s -D - -o /dev/null "$xpi_url" | grep -oP 'Location:.+\Khttps.+(?=\?filehash)')"
         xpi_list+=("\\\"$xpi_url\\\"")
