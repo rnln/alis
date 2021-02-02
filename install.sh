@@ -86,6 +86,7 @@ log () {
     local PADDING=''
     local NEWLINE='\n'
     local END='.'
+    local STATUS=''
 
     while getopts 'i:e:fnsw:' option; do
         case "$option" in
