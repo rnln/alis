@@ -52,7 +52,7 @@ shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
 
 
-MIRROR_COUNTRIES='Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine'
+MIRRORS_COUNTRIES='Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine'
 SUDO=$([ "$EUID" == 0 ] || echo sudo)
 CHROOT=$([ "$MODE" == 'post' ] || echo arch-chroot /mnt)
 
@@ -139,13 +139,13 @@ setup_color_scheme () {
 
 check_system_errors () {
     log 'System errors information'
-    log -i 1 'systemctl --failed:'
+    log -i 1 -e ':' 'systemctl --failed'
     PAGER= $SUDO systemctl --failed
-    log -i 1 'journalctl -p 3 -xb:'
+    log -i 1 -e ':' 'journalctl -p 3 -xb'
     PAGER= $SUDO journalctl -p 3 -xb
 
     while true; do
-        log -i 1 -n 'Clear these logs? [Y/n] '
+        log -i 1 -n -e '? [Y/n] ' 'Clear these logs'
         read -e answer
         case $answer in
             [Nn]*) break ;;
@@ -154,7 +154,7 @@ check_system_errors () {
                 $SUDO journalctl --vacuum-time=1s
                 break
                 ;;
-            *) log -i 1 'Try again.'
+            *) log -i 1 'Try again'
         esac
     done
 }
@@ -184,7 +184,7 @@ install_vbox_guest_utils () {
 
 
 install_base () {
-    log -s -w "${ES_GREEN}" 'Arch Linux base installation'
+    log -s -w "${ES_CYAN}" 'Arch Linux base installation'
 
     log -s 'getting user data'
     log -n -i 1 -e ': ' '(1/7) Hostname [host]'
@@ -251,8 +251,11 @@ install_base () {
     swapon /dev/sda2
     log -f 'file systems mounting'
 
+    log -s 'mirrors list updating'
+    reflector --fastest 5 --sort rate -c "$MIRRORS_COUNTRIES" --protocol https --save /etc/pacman.d/mirrorlist
+    log -f 'mirrors list updating'
+
     log -s 'essential packages installation'
-    reflector --latest 20 --sort rate -c "$MIRROR_COUNTRIES" --protocol https >/etc/pacman.d/mirrorlist
     pacman -Syy
     pacstrap /mnt base linux-firmware
     if [ "$LTS" == true ]; then
@@ -269,6 +272,7 @@ install_base () {
     sed -i 's/^#\(\(en_US\|ru_RU\)\.UTF-8 UTF-8\)/\1/' /mnt/etc/locale.gen
     $CHROOT locale-gen
     echo LANG=en_US.UTF-8 >/mnt/etc/locale.conf
+    cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
     log -f 'system configuring'
 
     log -s 'network configuring'
@@ -310,14 +314,14 @@ install_base () {
     umount -R /mnt
     log -f 'partitions unmounting'
 
-    log -f -w "${ES_GREEN}" 'Arch Linux base installation'
+    log -f -w "${ES_CYAN}" 'Arch Linux base installation'
 
     check_system_errors
 }
 
 
 install_post () {
-    echo -e "Started ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
+    log -s -w "${ES_CYAN}" 'Arch Linux post-installation'
 
     export XDG_CONFIG_HOME="$HOME/.config"
 
@@ -343,7 +347,12 @@ install_post () {
     log -s 'pacman configuring'
     sudo pacman -Syyu --noconfirm --needed
     install_packages reflector
-    sudo sh -c "reflector --latest 20 --sort rate -c '$MIRROR_COUNTRIES' --protocol https >/etc/pacman.d/mirrorlist"
+    sudo sh -c "echo '--save /etc/pacman.d/mirrorlist' >/etc/xdg/reflector/reflector.conf"
+    sudo sh -c "echo '--protocol https' >>/etc/xdg/reflector/reflector.conf"
+    sudo sh -c "echo '--country $MIRRORS_COUNTRIES' >>/etc/xdg/reflector/reflector.conf"
+    sudo sh -c "echo '--sort rate' >>/etc/xdg/reflector/reflector.conf"
+    sudo sh -c "echo '--fastest 5' >>/etc/xdg/reflector/reflector.conf"
+    sudo systemctl enable --now reflector.timer
     log -f 'pacman configuring'
 
     log -s 'paru installation'
@@ -384,25 +393,25 @@ install_post () {
     install_packages -a ufw
     sudo ufw limit ssh
     sudo ufw allow transmission
-    sudo systemctl enable ufw
+    sudo systemctl enable --now ufw
     log -f 'ufw installation'
 
     log -s 'additional packages installation'
     additional_packages=(
-        "code"
-        "inetutils"
-        "kitty"
-        "librewolf-bin"
-        "man"
-        "p7zip"
-        "python-pip"
-        "qalculate-gtk"
-        "telegram-desktop"
-        "transmission-gtk"
-        "vim"
-        "vlc"
-        "xcursor-openzone"
-        "youtube-dl"
+        'code'
+        'inetutils'
+        'kitty'
+        'librewolf-bin'
+        'man'
+        'p7zip'
+        'python-pip'
+        'qalculate-gtk'
+        'telegram-desktop'
+        'transmission-gtk'
+        'vim'
+        'vlc'
+        'xcursor-openzone'
+        'youtube-dl'
     )
     install_packages -a "${additional_packages[@]}"
     if [ "$VBOX" == true ]; then
@@ -450,14 +459,15 @@ install_post () {
         'ublock-origin'
     )
     xpi_list=()
-    echo "getting URIs of Firefox add-ons' xpi files"
+    log -s -i 1 "getting URIs of Firefox add-ons' xpi files"
     for addon in "${addons_list[@]}"; do
-        echo "checking add-on \"$addon\""
+        log -i 2 -e '...' "checking add-on \"$addon\""
         xpi_url="$addons_root/downloads/file/$(curl -sL "$addons_root/addon/$addon" | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
         xpi_url="$(curl -s -D - -o /dev/null "$xpi_url" | grep -oP 'Location:.+\Khttps.+(?=\?filehash)')"
         xpi_list+=("\\\"$xpi_url\\\"")
     done
     xpi_list=`printf ',%s' "${xpi_list[@]}" | cut -c 2-`
+    log -f -i 1 "getting URIs of Firefox add-ons' xpi files"
     export xpi_list
     envsubst '$USER,$HOST,$xpi_list' <"$tempdir/.librewolf/default/user.js" >"$HOME/.librewolf/default/user.js"
     rm -rf "$tempdir"
@@ -526,7 +536,7 @@ install_post () {
     sudo pacman -Scc --noconfirm
     log -f 'pacman clearing up'
 
-    echo -e "Finished ${ES_BOLD}${ES_GREEN}Arch Linux post-installation${ES_RESET}."
+    log -f -w "${ES_CYAN}" 'Arch Linux post-installation'
 
     check_system_errors
 }
