@@ -203,10 +203,10 @@ install_base () {
     done
     ROOT_PASSWORD=${ROOT_PASSWORD:-root}
     log -n -i 1 -e ': ' '(4/7) User full name [User]'
-    read -p USER_FULLNAME
+    read USER_FULLNAME
     USER_FULLNAME=${USER_FULLNAME:-User}
     log -n -i 1 -e ': ' '(5/7) Username [user]'
-    read -p USER_USERNAME
+    read USER_USERNAME
     USER_USERNAME=${USER_USERNAME:-user}
     while true; do
         log -n -i 1 -e ': ' '(6/7) User password [user]'
