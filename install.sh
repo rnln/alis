@@ -89,7 +89,7 @@ log () {
 
     while getopts 'd:e:fnsw:' option; do
         case "$option" in
-            d) DEPTH=$OPTARG ;;
+            i) DEPTH=$OPTARG ;;
             e) END="${OPTARG}" ;;
             w) FORMAT="${FORMAT}${OPTARG}" ;;
             f) STATUS='Finished ' ;;
