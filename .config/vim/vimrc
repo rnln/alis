@@ -1,0 +1,99 @@
+set nocompatible
+
+set viminfo+=n~/.cache/vim/viminfo
+
+" indentation
+set autoindent
+set expandtab " convert tabs to spaces
+set smarttab " insert `tabstop` number of spaces when the `tab` key is pressed
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+
+" search
+set hlsearch
+set showmatch
+set ignorecase
+set incsearch " incremental search that shows partial matches
+set smartcase " automatically switch search to case-sensitive when search query contains an uppercase letter
+
+" performance
+set complete-=i " limit the files searched for auto-completes
+set lazyredraw " don't update screen during macro and script execution
+
+" text rendering
+set display+=lastline " always try to show a paragraph's last line
+set encoding=utf-8 " use an encoding that supports unicode
+set linebreak " avoid wrapping a line in the middle of a word
+set scrolloff=1 " the number of screen lines to keep above and below the cursor
+set sidescrolloff=5 " the number of screen columns to keep to the left and right of the cursor
+syntax on " enable syntax highlighting
+syntax sync minlines=64
+set wrap " enable line wrapping
+
+" user interface options
+color default
+" set laststatus=2 " always display the status bar
+" set ruler " always show cursor position
+set wildmenu " display command line's tab complete options as a menu
+" set tabpagemax=50 " maximum number of tab pages that can be opened from the command line
+set showcmd " display incomplete commands
+
+set cursorline " highlight the line currently under cursor
+highlight CursorLine cterm=NONE ctermbg=235
+
+set relativenumber " show line number on the current line and relative numbers on all other lines
+set numberwidth=1
+" term=NONE cterm=NONE ctermfg=DarkGrey ctermbg=NONE
+" highlight LineNr       cterm=NONE ctermbg=NONE ctermfg=DarkGrey
+highlight LineNr ctermfg=DarkGrey
+" highlight CursorLineNr cterm=NONE ctermbg=234  ctermfg=DarkGrey
+highlight CursorLineNr cterm=NONE ctermfg=DarkGrey ctermbg=235
+highlight CursorLine   cterm=NONE ctermbg=234  ctermfg=NONE
+highlight CursorColumn cterm=NONE ctermbg=234  ctermfg=NONE
+
+" set noerrorbells " disable beep on errors
+" set visualbell " flash the screen instead of beeping on errors
+set mouse=a " enable mouse for scrolling and resizing
+set title " set the window’s title, reflecting the file currently being edited
+
+"autocmd FileType python set tabstop=4 shiftwidth=4 expandtab
+"autocmd FileType css set tabstop=2 shiftwidth=2 expandtab
+
+" code folding options
+set foldmethod=indent " fold based on indention levels
+set nofoldenable " disable folding by default
+
+" miscellaneous options
+" set autoread " automatically re-read files if unmodified inside Vim
+set backspace=indent,eol,start " allow backspacing over indention, line breaks and insertion start
+" set backupdir=~/.cache/vim " directory to store backup files
+" set dir=~/.cache/vim " directory to store swap files
+" set confirm " display a confirmation dialog when closing an unsaved file
+" set formatoptions=tcqrn1j " j = delete comment characters when joining lines
+" set hidden " hide files in the background instead of closing them
+set history=1000 " increase the undo limit (default is 50)
+" set nomodeline " ignore file’s mode lines; use vimrc configurations instead
+" set noswapfile " disable swap files
+" set nrformats-=octal " interpret octal as decimal when incrementing numbers
+set shell=/usr/bin/zsh " the shell used to execute commands
+" set spell " enable spellchecking
+set wildignore+=.pyc,.swp " ignore files matching these patterns when opening files based on a glob pattern
+set shortmess=I
+
+set fileformats=unix,dos,mac
+set fileencodings=utf-8,cp1251,koi8-r,ucs-2,cp866
+set modelines=0
+set textwidth=80
+set list
+set listchars=tab:··
+set noshiftround
+set ttyfast " fast terminal connection
+set synmaxcol=1000 " avoid slow rendering for long lines
+set regexpengine=1 " previous regex engine version
+set matchpairs+=<:> " use % to jump between pairs
+set pastetoggle=<F3>
+
+" mapping from Q and W to q and w
+command! -bang -range=% -complete=file -nargs=* W <line1>,<line2>write<bang> <args>
+command! -bang Q quit<bang>

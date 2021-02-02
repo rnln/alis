@@ -393,7 +393,7 @@ install_post () {
     log -s 'runtime configuration files cloning'
     install_packages -a rsync
     tempdir="$(mktemp -d)"
-    git clone https://gitlab.com/romanilin/rcs.git "$tempdir"
+    git clone https://gitlab.com/romanilin/alis.git "$tempdir"
     rm -rf "$tempdir/.git"
     rm -rf "$tempdir/LICENSE"
     rm -rf "$tempdir/README.md"
@@ -482,7 +482,6 @@ install_post () {
     other_apps=[\'${other_apps::-4}\']
 
     envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_apps,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
-    envsubst '$other_apps' <dump.ini | dconf load /
     rm "$HOME/.config/dconf/dump.ini"
     log -f 'GNOME configuring'
 

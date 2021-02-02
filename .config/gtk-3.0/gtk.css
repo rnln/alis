@@ -1,0 +1,11 @@
+notebook > header.top > tabs {
+  padding: 0;
+}
+notebook > header.top > tabs > tab {
+  font-weight: normal;
+  margin: 0;
+  padding: 0 8px;
+}
+notebook > header.top > tabs > tab > button {
+  min-width: 16px;
+}

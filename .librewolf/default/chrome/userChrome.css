@@ -1,0 +1,29 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* Add a keyword when adding a bookmark */
+ #keywordRow {
+  display: -moz-grid-line !important;
+}
+
+/* Remove Stop button when there's nothing to Stop */
+ #stop-button[disabled="true"] {
+  display: none;
+}
+
+/* Remove Back button when there's nothing to go Back to */
+ #back-button[disabled="true"] {
+  display: none;
+}
+
+/* Remove Forward button when there's nothing to go Forward to */
+ #forward-button[disabled="true"] {
+  display: none;
+}
+
+/* Multi-row bookmarks toolbar */
+ #bookmarks-ptf {
+  display: block;
+}
+ #bookmarks-ptf toolbarseparator {
+  display: inline;
+}

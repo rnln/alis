@@ -1,0 +1,52 @@
+# Intellij
+.idea/
+*.iws
+
+# Linux
+*~
+.fuse_hidden*
+.nfs*
+.Trash-*
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.code-workspace
+.history
+.ionide
+
+# Vim
+.netrwhist
+[._]*.s[a-v][a-z]
+!*.svg
+[._]*.sw[a-p]
+[._]*.un~
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+
+# macOS
+.AppleDouble
+.DS_Store
+.LSOverride
+._*
+.apdisk
+.AppleDB
+.AppleDesktop
+.com.apple.timemachine.donotpresent
+.DocumentRevisions-V100
+.fseventsd
+.localized
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+# icon with two \r
+Icon
+Network Trash Folder
+Temporary Items
