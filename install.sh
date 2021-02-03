@@ -141,7 +141,7 @@ setup_color_scheme () {
 
 
 check_system_errors () {
-    log 'System errors information'
+    log -e ':' 'System errors information'
     log -i 1 -e ':' 'systemctl --failed'
     PAGER= $SUDO systemctl --failed
     log -i 1 -e ':' 'journalctl -p 3 -xb'
@@ -328,6 +328,7 @@ install_post () {
 
     export XDG_CONFIG_HOME="$HOME/.config"
     export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
+    mkdir -p "$GNUPGHOME"
 
     log -s 'sudo timeout preventing'
     command -v sudo >/dev/null 2>&1 || {
