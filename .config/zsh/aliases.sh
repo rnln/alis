@@ -88,13 +88,11 @@ function ds () {
 }
 
 SSH_CONFIG="-F $XDG_CONFIG_HOME/ssh/config"
-SSH_ID="-i $XDG_CONFIG_HOME/ssh/id_dsa"
-alias ssh="ssh $SSH_CONFIG $SSH_ID"
-alias ssh-copy-id="ssh-copy-id $SSH_ID"
-alias scp="scp $SSH_CONFIG $SSH_ID"
-# ssh and scp with StrictHostKeyChecking=no and UserKnownHostsFile unset
-alias insecssh='ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
-alias insecscp='scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
+alias ssh-sec="ssh $SSH_CONFIG"
+alias scp-sec="scp $SSH_CONFIG"
+SSH_CONFIG='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
+alias ssh="ssh-sec $SSH_CONFIG"
+alias scp="scp-sec $SSH_CONFIG"
 
 function ex () {
     local return_code=0

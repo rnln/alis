@@ -1,6 +1,8 @@
 bindkey -e
+WORDCHARS=
+KEYTIMEOUT=1
 
-bindkey '^[d' copy-prev-shell-word # [Esc-m] copy previous shell word
+bindkey '^[d' copy-prev-shell-word # [Esc-d] copy previous shell word
 bindkey -s '^[b' '.bak' # [Esc-b] insert '.bak'
 bindkey ' ' magic-space # [Space] - don't do history expansion
 
@@ -33,5 +35,3 @@ bindkey '^?' backward-delete-char # [Backspace] - delete backward
 bindkey '^[[3~' delete-char # [Delete] - delete forward
 bindkey '^[[3;5~' kill-word # [Ctrl-Delete] - delete whole forward-word
 bindkey '^H' backward-kill-word # [Ctrl-Backspace] - delete whole backward-word
-
-export KEYTIMEOUT=1

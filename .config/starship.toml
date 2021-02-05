@@ -5,3 +5,6 @@ disabled = true
 
 [git_status]
 deleted = "✗"
+
+[python]
+format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
