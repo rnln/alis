@@ -369,11 +369,27 @@ install_post () {
     log -f 'paru installation'
 
     log -s 'fonts installation'
-    install_packages -a ttf-jetbrains-mono noto-fonts noto-fonts-emoji # noto-fonts-cjk
+    fonts_packages=(
+        'ttf-jetbrains-mono'
+        'noto-fonts'
+        'noto-fonts-emoji'
+        # 'noto-fonts-cjk'
+    )
+    install_packages -a "${fonts_packages[@]}"
     log -f 'fonts installation'
 
     log -s 'GNOME installation'
-    install_packages -a gdm gnome-terminal gnome-control-center nautilus gnome-themes-extra chrome-gnome-shell gnome-tweaks eog
+    gnome_packages=(
+        'gdm'
+        'gnome-terminal'
+        'gnome-control-center'
+        'nautilus'
+        'gnome-themes-extra'
+        'chrome-gnome-shell'
+        'gnome-tweaks'
+        'eog'
+    )
+    install_packages -a "${gnome_packages[@]}"
     sudo systemctl enable gdm
     log -f 'GNOME installation'
 
@@ -403,17 +419,17 @@ install_post () {
 
     log -s 'additional packages installation'
     additional_packages=(
+        'man'
+        'vim'
         'code'
         'inetutils'
         'kitty'
         'librewolf-bin'
-        'man'
         'p7zip'
         'python-pip'
         'qalculate-gtk'
         'telegram-desktop'
         'transmission-gtk'
-        'vim'
         'vlc'
         'xcursor-openzone'
         'youtube-dl'
@@ -438,7 +454,6 @@ install_post () {
     sudo mkdir /usr/lib/electron9/bin
     sudo ln /usr/bin/code-oss /usr/lib/electron9/bin/code-oss
     # generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
-    addons_root="https://addons.mozilla.org/firefox"
     addons_list=(
         # https://addons.mozilla.org/addon/${addon}/
         'copy-selected-tabs-to-clipboar'
@@ -463,6 +478,7 @@ install_post () {
         'uaswitcher'
         'ublock-origin'
     )
+    addons_root="https://addons.mozilla.org/firefox"
     xpi_list=()
     log -s -i 1 "getting URIs of Firefox add-ons' xpi files"
     for addon in "${addons_list[@]}"; do
@@ -506,21 +522,47 @@ install_post () {
     export terminal_profile="$(uuidgen)"
 
     not_to_hide_apps=(
-        "chromium"
-        "code-oss"
-        "kitty"
-        "librewolf"
-        "org.gnome.Nautilus"
-        "qalculate-gtk"
-        "telegramdesktop"
-        "transmission-gtk"
-        "virtualbox"
+        'chromium'
+        'code-oss'
+        'kitty'
+        'librewolf'
+        'org.gnome.Nautilus'
+        'qalculate-gtk'
+        'telegramdesktop'
+        'transmission-gtk'
+        'virtualbox'
     )
     not_to_hide_apps=`printf '\|%s' "${not_to_hide_apps[@]}" | cut -c 3-` # join with "\|"
     export other_apps=$(ls -A1 /usr/share/applications | grep .desktop$)
     other_apps=$(grep -v "\($not_to_hide_apps\).desktop" <<<$other_apps)
     other_apps=$(awk '{ print $0 }' RS='\n' ORS="', '" <<<$other_apps)
     other_apps=[\'${other_apps::-4}\']
+
+    EXTENSIONS=(
+        '1010/archlinux-updates-indicator'
+        '1031/topicons'
+        '1526/notification-centerselenium-h'
+        '19/user-themes'
+        '517/caffeine'
+        '615/appindicator-support'
+        '7/removable-drive-menu'
+        '800/remove-dropdown-arrows'
+    )
+    tempdir=$(mktemp -d)
+    EXTENSIONS_ROOT='https://extensions.gnome.org'
+    GNOME_SHELL_VERSION="$(gnome-shell --version | awk '{print $NF}')"
+    for EXTENSION in "${EXTENSIONS[@]}"; do
+        DATA_UUID="$(curl $EXTENSIONS_ROOT/extension/$EXTENSION/ -so - | awk -F\" '/data-uuid/ {print $2}')"
+        # VERSION_TAG="$(curl $EXTENSIONS_ROOT/extension/$EXTENSION/ -so - | awk -F\" '/data-versions/ {print $2}' | grep -Po '(?<=&quot;pk&quot;: )\d+' | tail -1)"
+        # EXTENSION_URL="$EXTENSIONS_ROOT/download-extension/$DATA_UUID.shell-extension.zip?version_tag=$VERSION_TAG"
+        EXTENSION_URL="$EXTENSIONS_ROOT/download-extension/$DATA_UUID.shell-extension.zip?shell_version=$GNOME_SHELL_VERSION"
+        EXTENSION_URL="$(curl -sI $EXTENSION_URL | awk '/Location:/ {print $2}' | tr -d '\r')"
+        sh -c "cd '$tempdir' && curl -fsSLO '$EXTENSIONS_ROOT$EXTENSION_URL'"
+        gnome-extensions install -f $tempdir/*.zip
+        gnome-extensions enable $DATA_UUID
+        rm $tempdir/*
+    done
+    rm -rf "$tempdir"
 
     envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_apps,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
     rm "$HOME/.config/dconf/dump.ini"
