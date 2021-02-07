@@ -553,8 +553,7 @@ install_post () {
     GNOME_SHELL_VERSION="$(gnome-shell --version | awk '{print $NF}')"
     for EXTENSION in "${EXTENSIONS[@]}"; do
         DATA_UUID="$(curl $EXTENSIONS_ROOT/extension/$EXTENSION/ -so - | awk -F\" '/data-uuid/ {print $2}')"
-        # VERSION_TAG="$(curl $EXTENSIONS_ROOT/extension/$EXTENSION/ -so - | awk -F\" '/data-versions/ {print $2}' | grep -Po '(?<=&quot;pk&quot;: )\d+' | tail -1)"
-        # EXTENSION_URL="$EXTENSIONS_ROOT/download-extension/$DATA_UUID.shell-extension.zip?version_tag=$VERSION_TAG"
+        # dbus-send --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Extensions.InstallRemoteExtension string:"$DATA_UUID"
         EXTENSION_URL="$EXTENSIONS_ROOT/download-extension/$DATA_UUID.shell-extension.zip?shell_version=$GNOME_SHELL_VERSION"
         EXTENSION_URL="$(curl -sI $EXTENSION_URL | awk '/Location:/ {print $2}' | tr -d '\r')"
         sh -c "cd '$tempdir' && curl -fsSLO '$EXTENSIONS_ROOT$EXTENSION_URL'"
@@ -563,6 +562,7 @@ install_post () {
         rm $tempdir/*
     done
     rm -rf "$tempdir"
+    find "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet" \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i 's/Up to date :)/Up to date/g'
 
     envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_apps,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
     rm "$HOME/.config/dconf/dump.ini"
