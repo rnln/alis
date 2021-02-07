@@ -422,9 +422,9 @@ install_post () {
         'man'
         'vim'
         'code'
-        'inetutils'
         'kitty'
         'librewolf-bin'
+        'inetutils'
         'p7zip'
         'python-pip'
         'qalculate-gtk'
@@ -541,11 +541,14 @@ install_post () {
     EXTENSIONS=(
         '1010/archlinux-updates-indicator'
         '1031/topicons'
+        # '1112/screenshot-tool'
+        '1236/noannoyance'
         '1526/notification-centerselenium-h'
         '19/user-themes'
         '517/caffeine'
         '615/appindicator-support'
         '7/removable-drive-menu'
+        '779/clipboard-indicator'
         '800/remove-dropdown-arrows'
     )
     tempdir=$(mktemp -d)
