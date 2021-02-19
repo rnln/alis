@@ -10,7 +10,7 @@ export HISTSIZE=100000
 export SAVEHIST=100000
 
 export EDITOR=vim
-export VIMINIT="source $XDG_CONFIG_HOME/vim/vimrc"
+export VIMINIT='let $MYVIMRC="$XDG_CONFIG_HOME/vim/vimrc" | source $MYVIMRC'
 
 export PAGER=less
 export LESS='-ciJMR +Gg'
