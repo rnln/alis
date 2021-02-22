@@ -2,15 +2,17 @@ alias please='sudo $(fc -ln -1)'
 alias rmf='rm -rf'
 
 # grep
-alias grep='grep --color=auto'
-alias egrep='egrep --color=auto'
-alias fgrep='fgrep --color=auto'
+grep_options='--color=auto --exclude-dir={.git,.idea,.vscode,.venv}'
+alias grep="grep $grep_options"
+alias egrep="egrep $grep_options"
+alias fgrep="fgrep $grep_options"
 
 # write a prompt before overwriting an existing file
 alias cp='cp -i'
 alias mv='mv -i'
 
-alias l='LC_COLLATE=C ls --almost-all --classify --group-directories-first --human-readable --time-style="+%F %T" -cl --color=auto'
+alias ls='ls --hyperlink --color'
+alias l='LC_COLLATE=C ls --almost-all --classify --group-directories-first --human-readable --time-style="+%F %T" -cl'
 alias ...='cd ../../'
 alias rmc='cd ..; rmdir $OLDPWD || cd $OLDPWD' # Remove current empty directory
 
@@ -47,18 +49,9 @@ function mkcd () {
 }
 
 # list files which have been accessed, changed and modified within the last {\it n} days, {\it n} defaults to 1
-function accessed () {
-    emulate -L zsh
-    print -l -- *(a-${1:-1})
-}
-function changed () {
-    emulate -L zsh
-    print -l -- *(c-${1:-1})
-}
-function modified () {
-    emulate -L zsh
-    print -l -- *(m-${1:-1})
-}
+function accessed () { emulate -L zsh; print -l -- *(a-${1:-1}) }
+function changed  () { emulate -L zsh; print -l -- *(c-${1:-1}) }
+function modified () { emulate -L zsh; print -l -- *(m-${1:-1}) }
 
 function pss () {
     emulate -L zsh
@@ -70,7 +63,7 @@ function pss () {
     else
         local ps_snapshot="$(ps xauwww)"
         echo $ps_snapshot | head -1
-        echo $ps_snapshot | tail +2 | grep -i "[${1[1]}]${1[2,-1]}" --color=always | GREP_COLORS='mt=1;34' grep --color -P '^\S+\s+\K\S+'
+        echo $ps_snapshot | tail +2 | grep -i "[${1[1]}]${1[2,-1]}" --color=always | GREP_COLORS='mt=1;34' grep -P '^\S+\s+\K\S+'
     fi
 }
 
@@ -87,12 +80,12 @@ function ds () {
     fi
 }
 
-SSH_CONFIG="-F $XDG_CONFIG_HOME/ssh/config"
-alias ssh-sec="ssh $SSH_CONFIG"
-alias scp-sec="scp $SSH_CONFIG"
-SSH_CONFIG='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
-alias ssh="ssh-sec $SSH_CONFIG"
-alias scp="scp-sec $SSH_CONFIG"
+ssh_options="-F $XDG_CONFIG_HOME/ssh/config"
+alias ssh-sec="ssh $ssh_options"
+alias scp-sec="scp $ssh_options"
+ssh_options='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
+alias ssh="ssh-sec $ssh_options"
+alias scp="scp-sec $ssh_options"
 
 function ex () {
     local return_code=0
@@ -130,11 +123,11 @@ function ex () {
                         mkdir "${entry%.*}"
                         ar x --output "${entry%.*}" "$entry" ;;
                     *)
-                        echo "ex: cannot extract '$entry': is not a supported file extension" >&2
+                        echo "$0: cannot extract '$entry': is not a supported file extension" >&2
                         return_code=1
                 esac
             else
-                echo "ex: cannot extract '$entry': is not a file" >&2
+                echo "$0: cannot extract '$entry': is not a file" >&2
                 return_code=1
             fi
         done

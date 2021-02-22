@@ -1,0 +1,8 @@
+DESKTOP=desktop
+DOWNLOAD=downloads
+DOCUMENTS=desktop/documents
+TEMPLATES=desktop/documents/templates
+PUBLICSHARE=desktop/documents/public
+MUSIC=desktop/documents/music
+PICTURES=desktop/documents/pictures
+VIDEOS=desktop/documents/videos

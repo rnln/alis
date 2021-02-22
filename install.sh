@@ -432,6 +432,7 @@ install_post () {
 	additional_packages=(
 		'man'
 		'vim'
+		'xdg-user-dirs'
 		'code'
 		'kitty'
 		'librewolf-bin'
