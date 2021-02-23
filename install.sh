@@ -433,6 +433,7 @@ install_post () {
 		'man'
 		'vim'
 		'xdg-user-dirs'
+		'chromium'
 		'code'
 		'kitty'
 		'librewolf-bin'
@@ -463,8 +464,8 @@ install_post () {
 	chmod 700 "$XDG_CONFIG_HOME/gnupg"
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/paru/paru.conf" >"$XDG_CONFIG_HOME/paru/paru.conf"
-	sudo mkdir /usr/lib/electron9/bin
-	sudo ln /usr/bin/code-oss /usr/lib/electron9/bin/code-oss
+	sudo mkdir /usr/lib/electron/bin
+	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	# generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
 	addons_list=(
 		# https://addons.mozilla.org/addon/${addon}/

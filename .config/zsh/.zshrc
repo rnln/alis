@@ -44,6 +44,11 @@ source "$ZDOTDIR/keybindings.sh"
 
 source "$ZDOTDIR/aliases.sh"
 
+if [ -d "$HOME/filanco" ]; then
+    export FILANCO_HOME="$HOME/filanco"
+    source "$FILANCO_HOME/scripts/configs/.zshrc"
+fi
+
 zstyle :compinstall filename "$ZDOTDIR/.zshrc"
 autoload -Uz compinit
 compinit
