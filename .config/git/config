@@ -10,7 +10,7 @@
 [init]
 	defaultBranch = main
 [web]
-	browser = firefox
+	browser = librewolf
 [rerere]
 	enabled = 1
 	autoupdate = 1
@@ -36,3 +36,5 @@
 	tool = vimdiff
 [difftool]
 	prompt = false
+[credential]
+	helper = /usr/lib/git-core/git-credential-gnome-keyring
