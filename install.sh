@@ -474,6 +474,7 @@ install_post () {
 		'default-bookmark-folder'
 		'gnome-shell-integration'
 		'image-search-options'
+		'keepassxc-browser'
 		'tampermonkey'
 		'wappalyzer'
 		# Privacy
@@ -492,17 +493,16 @@ install_post () {
 		'ublock-origin'
 	)
 	addons_root="https://addons.mozilla.org/firefox"
-	xpi_list=()
-	log -s -i 1 "getting URIs of Firefox add-ons' xpi files"
+	log -s -i 1 'Firefox add-ons installation'
 	for addon in "${addons_list[@]}"; do
-		log -i 2 -w "${ES_RESET}" -e '...' "checking add-on \"$addon\""
-		xpi_url="$addons_root/downloads/file/$(curl -sL "$addons_root/addon/$addon" | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
-		xpi_url="$(curl -s -D - -o /dev/null "$xpi_url" | grep -oP 'Location:.+\Khttps.+(?=\?filehash)')"
-		xpi_list+=("\\\"$xpi_url\\\"")
+		log -i 2 -w "${ES_RESET}" -e '...' "\"$addon\" installation"
+		addon_page="$(curl -sL "$addons_root/addon/$addon")"
+		addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
+		xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
+		curl -fsSL "$xpi_url" -o "$HOME/.librewolf/default/extensions/$addon_guid.xpi"
 	done
-	export xpi_list=`printf ',%s' "${xpi_list[@]}" | cut -c 2-`
-	log -f -i 1 "getting URIs of Firefox add-ons' xpi files"
-	envsubst '$USER,$HOST,$xpi_list' <"$tempdir/.librewolf/default/user.js" >"$HOME/.librewolf/default/user.js"
+	log -f -i 1 'Firefox add-ons installation'
+	envsubst '$USER,$HOST' <"$tempdir/.librewolf/default/user.js" >"$HOME/.librewolf/default/user.js"
 	rm -rf "$tempdir"
 	log -f 'runtime configuration files cloning'
 

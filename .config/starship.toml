@@ -4,7 +4,11 @@ add_newline = false
 disabled = true
 
 [git_status]
+ahead = "↑"
+behind = "↓"
 deleted = "✗"
+diverged = "∥"
+renamed = "→"
 
 [python]
 format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
