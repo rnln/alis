@@ -551,9 +551,8 @@ install_post () {
 	other_applications=[\'${other_applications::-4}\']
 
 	EXTENSIONS=(
-		'1010/archlinux-updates-indicator'
 		'1031/topicons'
-		# '1112/screenshot-tool'
+		'1112/screenshot-tool'
 		'1236/noannoyance'
 		'1526/notification-centerselenium-h'
 		'19/user-themes'
