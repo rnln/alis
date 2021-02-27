@@ -534,7 +534,7 @@ install_post () {
 
 	export terminal_profile="$(uuidgen)"
 
-	unhidden_applications=(
+	apps_to_show=(
 		'chromium'
 		'code-oss'
 		'kitty'
@@ -545,11 +545,11 @@ install_post () {
 		'transmission-gtk'
 		'virtualbox'
 	)
-	unhidden_applications=`printf '\|%s' "${unhidden_applications[@]}" | cut -c 3-` # join with "\|"
-	export other_applications=$(ls -A1 /usr/share/applications | grep .desktop$)
-	other_applications=$(grep -v "\($unhidden_applications\).desktop" <<<$other_applications)
-	other_applications=$(awk '{ print $0 }' RS='\n' ORS="', '" <<<$other_applications)
-	other_applications=[\'${other_applications::-4}\']
+	apps_to_show=`printf '\|%s' "${apps_to_show[@]}" | cut -c 3-` # join with "\|"
+	export apps_to_hide=$(ls -A1 /usr/share/applications | grep .desktop$)
+	apps_to_hide=$(grep -v "\($apps_to_show\).desktop" <<<$apps_to_hide)
+	apps_to_hide=$(awk '{ print $0 }' RS='\n' ORS="', '" <<<$apps_to_hide)
+	apps_to_hide=[\'${apps_to_hide::-4}\']
 
 	EXTENSIONS=(
 		'7/removable-drive-menu'
@@ -562,6 +562,7 @@ install_post () {
 		'1112/screenshot-tool'
 		'1236/noannoyance'
 		'1526/notification-centerselenium-h'
+		'3396/color-picker'
 	)
 	tempdir=$(mktemp -d)
 	EXTENSIONS_ROOT='https://extensions.gnome.org'
@@ -578,7 +579,7 @@ install_post () {
 	rm -rf "$tempdir"
 	find "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet" \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i 's/Up to date :)/Up to date/g'
 
-	envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$other_applications,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
+	envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$apps_to_hide,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
 	rm "$HOME/.config/dconf/dump.ini"
 	log -f 'GNOME configuring'
 
@@ -589,16 +590,11 @@ install_post () {
 	fi
 
 	log -s 'pacman clearing up'
-	echo '1'
-	orphans="$(pacman -Qtdq)"
-	echo '2'
+	orphans="$(pacman -Qtdq | tee)"
 	if [[ -n "$orphans" ]]; then
-		echo '3'
 		sudo pacman -Rcns --noconfirm "$orphans"
 	fi
-	echo '4'
 	sudo pacman -Scc --noconfirm
-	echo '5'
 	log -f 'pacman clearing up'
 
 	log -f -w "${ES_CYAN}" 'Arch Linux post-installation'
