@@ -106,7 +106,7 @@ log () {
 	[ "${1:-}" = '--' ] && shift
 
 	if [ $DEPTH -gt 0 ]; then
-		PADDING=$(printf "=%.0s" `seq $(($DEPTH * 4 - 2))`)
+		PADDING=$(printf "=%.0s" `seq $(($DEPTH * 2))`)
 		PADDING="${ES_CYAN}${PADDING}>${ES_RESET} "
 	fi
 
