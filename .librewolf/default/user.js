@@ -42,7 +42,7 @@ user_pref("browser.bookmarks.addedImportButton", true);
 user_pref("browser.ctrlTab.recentlyUsedOrder", false);
 user_pref("browser.pageActions.persistedActions", "{\"version\":1,\"ids\":[\"bookmark\",\"pinTab\",\"bookmarkSeparator\",\"copyURL\",\"emailLink\",\"addSearchEngine\",\"screenshots_mozilla_org\"],\"idsInUrlbar\":[]}");
 user_pref("browser.toolbars.bookmarks.visibility", "always");
-user_pref("browser.uiCustomization.state", "{\"placements\":{\"widget-overflow-fixed-list\":[],\"nav-bar\":[\"back-button\",\"forward-button\",\"stop-reload-button\",\"urlbar-container\",\"fxa-toolbar-menu-button\",\"downloads-button\",\"ublock0_raymondhill_net-browser-action\",\"add-ons-button\",\"panic-button\",\"preferences-button\"],\"toolbar-menubar\":[\"menubar-items\"],\"TabsToolbar\":[\"tabbrowser-tabs\",\"new-tab-button\",\"alltabs-button\"],\"PersonalToolbar\":[\"managed-bookmarks\",\"personal-bookmarks\"]},\"seen\":[],\"dirtyAreaCache\":[],\"currentVersion\":16}");
+user_pref("browser.uiCustomization.state", "{\"placements\":{\"widget-overflow-fixed-list\":[],\"nav-bar\":[\"back-button\",\"forward-button\",\"stop-reload-button\",\"urlbar-container\",\"fxa-toolbar-menu-button\",\"downloads-button\",\"panic-button\",\"ublock0_raymondhill_net-browser-action\"],\"toolbar-menubar\":[\"menubar-items\"],\"TabsToolbar\":[\"tabbrowser-tabs\",\"new-tab-button\",\"alltabs-button\"],\"PersonalToolbar\":[\"managed-bookmarks\",\"personal-bookmarks\"]},\"seen\":[],\"dirtyAreaCache\":[],\"currentVersion\":16}");
 user_pref("browser.uidensity", 1);
 user_pref("devtools.theme", "dark");
 // user_pref("devtools.toolbox.host", "right");
