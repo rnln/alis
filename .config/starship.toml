@@ -12,3 +12,6 @@ renamed = "→"
 
 [python]
 format = 'via [${symbol}${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+
+[nodejs]
+format = "via [[$symbol](green)($version )]($style)"
