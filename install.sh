@@ -492,6 +492,7 @@ install_post () {
 		'uaswitcher'
 		'ublock-origin'
 	)
+	mkdir -p "$HOME/.librewolf/default/extensions"
 	addons_root="https://addons.mozilla.org/firefox"
 	log -s -i 1 'Firefox add-ons installation'
 	for addon in "${addons_list[@]}"; do
