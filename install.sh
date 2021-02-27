@@ -555,20 +555,19 @@ install_post () {
 		'7/removable-drive-menu'
 		'19/user-themes'
 		'517/caffeine'
-		'615/appindicator-support'
 		'779/clipboard-indicator'
 		'800/remove-dropdown-arrows'
 		'1010/archlinux-updates-indicator'
 		'1031/topicons'
 		'1112/screenshot-tool'
 		'1236/noannoyance'
+		'1526/notification-centerselenium-h'
 	)
 	tempdir=$(mktemp -d)
 	EXTENSIONS_ROOT='https://extensions.gnome.org'
 	GNOME_SHELL_VERSION="$(gnome-shell --version | awk '{print $NF}')"
 	for EXTENSION in "${EXTENSIONS[@]}"; do
 		DATA_UUID="$(curl $EXTENSIONS_ROOT/extension/$EXTENSION/ -so - | awk -F\" '/data-uuid/ {print $2}')"
-		# dbus-send --type=method_call --dest=org.gnome.Shell /org/gnome/Shell org.gnome.Shell.Extensions.InstallRemoteExtension string:"$DATA_UUID"
 		EXTENSION_URL="$EXTENSIONS_ROOT/download-extension/$DATA_UUID.shell-extension.zip?shell_version=$GNOME_SHELL_VERSION"
 		EXTENSION_URL="$(curl -sI $EXTENSION_URL | awk '/Location:/ {print $2}' | tr -d '\r')"
 		sh -c "cd '$tempdir' && curl -fsSLO '$EXTENSIONS_ROOT$EXTENSION_URL'"
@@ -590,12 +589,16 @@ install_post () {
 	fi
 
 	log -s 'pacman clearing up'
+	echo '1'
 	orphans="$(pacman -Qtdq)"
+	echo '2'
 	if [[ -n "$orphans" ]]; then
-		sudo pacman -Rns --noconfirm $orphans
-		# sudo pacman -Rcns --noconfirm $orphans
+		echo '3'
+		sudo pacman -Rcns --noconfirm "$orphans"
 	fi
+	echo '4'
 	sudo pacman -Scc --noconfirm
+	echo '5'
 	log -f 'pacman clearing up'
 
 	log -f -w "${ES_CYAN}" 'Arch Linux post-installation'
