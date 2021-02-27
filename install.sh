@@ -552,16 +552,16 @@ install_post () {
 	other_applications=[\'${other_applications::-4}\']
 
 	EXTENSIONS=(
-		'1031/topicons'
-		'1112/screenshot-tool'
-		'1236/noannoyance'
-		'1526/notification-centerselenium-h'
+		'7/removable-drive-menu'
 		'19/user-themes'
 		'517/caffeine'
 		'615/appindicator-support'
-		'7/removable-drive-menu'
 		'779/clipboard-indicator'
 		'800/remove-dropdown-arrows'
+		'1010/archlinux-updates-indicator'
+		'1031/topicons'
+		'1112/screenshot-tool'
+		'1236/noannoyance'
 	)
 	tempdir=$(mktemp -d)
 	EXTENSIONS_ROOT='https://extensions.gnome.org'
