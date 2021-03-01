@@ -448,6 +448,8 @@ install_post () {
 		'vlc'
 		'xcursor-openzone'
 		'youtube-dl'
+		'keepassxc'
+		'libgnome-keyring'
 	)
 	install_packages -a "${additional_packages[@]}"
 	if [ "$VBOX" == true ]; then
