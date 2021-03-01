@@ -169,6 +169,23 @@ revert_sudoers () {
 }
 
 
+ask_to_reboot () {
+	while true; do
+		log -n -e '? [Y/n] ' 'Reboot now'
+		read -e answer
+		case $answer in
+			[Nn]*) break ;;
+			[Yy]*|'')
+				revert_sudoers
+				$SUDO reboot
+				break
+				;;
+			*) log -i 1 'Try again'
+		esac
+	done
+}
+
+
 install_packages () {
 	case $1 in
 		-a) shift
@@ -230,24 +247,22 @@ install_base () {
 	log -s 'partitioning'
 	SECTOR_SIZE=512
 	SWAP_SECTORS=$((`free -b | awk '/Mem/ {print $2}'` / $SECTOR_SIZE))
-	EFI=false
-	if [ -d /sys/firmware/efi/efivars ]; then EFI=true; fi
-
-	cat <<-EOF | sfdisk $DRIVE
-		label: gpt
-		sector-size: $SECTOR_SIZE
-		${DRIVE}1: type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=532480
-		${DRIVE}2: type=0657FD6D-A4AB-43C4-84E5-0933C84B4F4F, size=$SWAP_SECTORS
-		${DRIVE}3: type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
-	EOF
-
-	cat <<-EOF | sfdisk $DRIVE
-		label: gpt
-		sector-size: $SECTOR_SIZE
-		${DRIVE}1: type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=532480
-		${DRIVE}2: type=0657FD6D-A4AB-43C4-84E5-0933C84B4F4F, size=$SWAP_SECTORS
-		${DRIVE}3: type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
-	EOF
+	if [ -d /sys/firmware/efi/efivars ]; then
+		cat <<-EOF | sfdisk $DRIVE
+			label: gpt
+			sector-size: $SECTOR_SIZE
+			${DRIVE}1: type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=532480
+			${DRIVE}2: type=0657FD6D-A4AB-43C4-84E5-0933C84B4F4F, size=$SWAP_SECTORS
+			${DRIVE}3: type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
+		EOF
+	else
+		cat <<-EOF | sfdisk $DRIVE
+			label: dos
+			sector-size: $SECTOR_SIZE
+			${DRIVE}2: type=82, size=$SWAP_SECTORS
+			${DRIVE}3: type=83, bootable
+		EOF
+	fi
 	log -f 'partitioning'
 
 	log -s 'partitions formatting'
@@ -327,6 +342,8 @@ install_base () {
 	log -f -w "${ES_CYAN}" 'Arch Linux base installation'
 
 	check_system_errors
+
+	ask_to_reboot
 }
 
 
@@ -475,6 +492,7 @@ install_post () {
 		[ -f $file ] && ssh-add $file
 	done
 	sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
+	paru -Sy
 	sudo mkdir /usr/lib/electron/bin
 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	# generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
@@ -611,6 +629,8 @@ install_post () {
 	log -f -w "${ES_CYAN}" 'Arch Linux post-installation'
 
 	check_system_errors
+
+	ask_to_reboot
 }
 
 
