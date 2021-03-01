@@ -255,21 +255,27 @@ install_base () {
 			${DRIVE}2: type=0657FD6D-A4AB-43C4-84E5-0933C84B4F4F, size=$SWAP_SECTORS
 			${DRIVE}3: type=0FC63DAF-8483-4772-8E79-3D69D8477DE4
 		EOF
+		log -f 'partitioning'
+
+		log -s 'partitions formatting'
+		mkfs.fat -F 32 /dev/sda1
+		mkswap /dev/sda2
+		mkfs.ext4 /dev/sda3
+		log -f 'partitions formatting'
 	else
 		cat <<-EOF | sfdisk $DRIVE
 			label: dos
 			sector-size: $SECTOR_SIZE
-			${DRIVE}2: type=82, size=$SWAP_SECTORS
-			${DRIVE}3: type=83, bootable
+			${DRIVE}1: type=82, size=$SWAP_SECTORS
+			${DRIVE}2: type=83, bootable
 		EOF
-	fi
-	log -f 'partitioning'
+		log -f 'partitioning'
 
-	log -s 'partitions formatting'
-	mkfs.fat -F 32 /dev/sda1
-	mkswap /dev/sda2
-	mkfs.ext4 /dev/sda3
-	log -f 'partitions formatting'
+		log -s 'partitions formatting'
+		mkswap /dev/sda1
+		mkfs.ext4 /dev/sda2
+		log -f 'partitions formatting'
+	fi
 
 	log -s 'file systems mounting'
 	mount /dev/sda3 /mnt
