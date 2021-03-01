@@ -1,5 +1,5 @@
 Host *
     LogLevel ERROR
-    StrictHostKeyChecking no
-    UserKnownHostsFile /dev/null
+    IdentityFile $XDG_CONFIG_HOME/ssh/id_ed25519
     IdentityFile $XDG_CONFIG_HOME/ssh/id_rsa
+    UserKnownHostsFile $XDG_CONFIG_HOME/ssh/known_hosts
