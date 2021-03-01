@@ -262,6 +262,11 @@ install_base () {
 		mkswap /dev/sda2
 		mkfs.ext4 /dev/sda3
 		log -f 'partitions formatting'
+
+		log -s 'file systems mounting'
+		mount /dev/sda3 /mnt
+		swapon /dev/sda2
+		log -f 'file systems mounting'
 	else
 		cat <<-EOF | sfdisk $DRIVE
 			label: dos
@@ -275,12 +280,12 @@ install_base () {
 		mkswap /dev/sda1
 		mkfs.ext4 /dev/sda2
 		log -f 'partitions formatting'
-	fi
 
-	log -s 'file systems mounting'
-	mount /dev/sda3 /mnt
-	swapon /dev/sda2
-	log -f 'file systems mounting'
+		log -s 'file systems mounting'
+		mount /dev/sda2 /mnt
+		swapon /dev/sda1
+		log -f 'file systems mounting'
+	fi
 
 	log -s 'mirrors list updating'
 	reflector --fastest 5 --sort rate -c "$MIRRORS_COUNTRIES" --protocol https --save /etc/pacman.d/mirrorlist
