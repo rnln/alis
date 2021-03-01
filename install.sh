@@ -378,9 +378,10 @@ install_post () {
 	log -s 'fonts installation'
 	fonts_packages=(
 		'ttf-jetbrains-mono'
+		'ttf-nerd-fonts-symbols-mono'
 		'noto-fonts'
 		'noto-fonts-emoji'
-		# 'noto-fonts-cjk'
+		'noto-fonts-cjk'
 	)
 	install_packages -a "${fonts_packages[@]}"
 	log -f 'fonts installation'
@@ -416,6 +417,7 @@ install_post () {
 	install_packages -a openssh
 	sudo sh -c 'echo "DisableForwarding yes # disable all forwarding features (overrides all other forwarding-related options)" >>/etc/ssh/sshd_config'
 	sudo sed -i 's/^#\(IgnoreRhosts\).*/\1 yes/' /etc/ssh/sshd_config
+	sudo sed -i "s/^#\(AuthorizedKeysFile\).*/\1 .config\/ssh\/authorized_keys/" /etc/ssh/sshd_config
 	# sudo sed -i 's/^#\(PasswordAuthentication\).*/\1 no/' /etc/ssh/sshd_config
 	sudo sed -i 's/^#\(PermitRootLogin\).*/\1 no/' /etc/ssh/sshd_config
 	sudo systemctl enable sshd
@@ -463,7 +465,14 @@ install_post () {
 	rsync -a "$tempdir/" "$HOME/"
 	chmod 700 "$XDG_CONFIG_HOME/gnupg"
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
-	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/paru/paru.conf" >"$XDG_CONFIG_HOME/paru/paru.conf"
+	ssh-keygen -P '' -t ed25519 -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
+	ssh-keygen -P '' -o -t rsa -b 4096 -f "$XDG_CONFIG_HOME/ssh/id_rsa"
+	eval "$(ssh-agent -s)"
+	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
+	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
+		[ -f $file ] && ssh-add $file
+	done
+	sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
 	sudo mkdir /usr/lib/electron/bin
 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	# generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference

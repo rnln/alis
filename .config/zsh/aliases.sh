@@ -81,11 +81,11 @@ function ds () {
 }
 
 ssh_options="-F $XDG_CONFIG_HOME/ssh/config"
-alias ssh-sec="command ssh $ssh_options"
-alias scp-sec="command scp $ssh_options"
+alias ssh="ssh $ssh_options"
+alias scp="scp $ssh_options"
 ssh_options='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
-alias ssh="ssh-sec $ssh_options"
-alias scp="scp-sec $ssh_options"
+alias ssh-insec="ssh $ssh_options"
+alias scp-insec="scp $ssh_options"
 
 function ex () {
     local return_code=0
