@@ -145,7 +145,8 @@ for option in "$@"; do
 			set -- "$@" '-x' ;;
 		'--drive')
 			set -- "$@" '-d' ;;
-		*)  set -- "$@" "$option"
+		*)  [ "$option" = --* ] && echo "unknown option \"$option\"" >&2; exit 1
+			set -- "$@" "$option"
 	esac
 done
 
@@ -156,17 +157,17 @@ XORG=false
 DRIVE='/dev/sda'
 
 OPTIND=1
-
-while getopts 'd:lpvx' option; do
+while getopts ':d:lpvx' option; do
 	case "$option" in
 		d) DRIVE="$OPTARG" ;;
 		l) LTS=true ;;
 		p) MODE='post' ;;
 		v) VBOX=true ;;
-		x) XORG=true
+		x) XORG=true ;;
+		?) echo "unknown option \"$option\"" >&2
+		   exit 1
 	esac
 done
-
 shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
 
