@@ -1,13 +1,21 @@
 /* Top bar */
 #panel {
     background-color: transparent;
+    margin-right: 6px;
 }
 
 /* Remove rounded corners */
 #panel .panel-corner { -panel-corner-radius: 0 }
 
+/* Decrease buttons padding */
+#panel .panel-button {
+    -natural-hpadding: 5px;
+    -minimum-hpadding: 5px;
+}
+
 /* Show Arch Linux logo instead of "Activities" text */
 #panelActivities > * {
+    margin-left: 12px;
     width: 15px;
     color: transparent;
     background-image: url("arch-linux.svg");
@@ -28,4 +36,14 @@
 #panel .panel-button:overview {
     background-color: transparent;
     box-shadow: none;
+}
+
+/* Increase system icons spacing */
+#panel .panel-button .system-status-icon {
+    padding: 0 6px;
+}
+
+/* Current application icon */
+#panel .panel-button .app-menu-icon {
+    margin: 0 6px;
 }
