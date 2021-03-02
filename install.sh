@@ -1,18 +1,25 @@
 #!/bin/sh
-# Run script via curl:
-#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)"
-# Supported arguments:
-#   -l, --lts    Install linux-lts package instead of linux
-#   -p, --post   Start post-installation (grub, swapiness, pacman configuring, GNOME installation, etc.)
-#                By deafult script starts Arch Linux base installation with NetworkManager
-#   -v, --vbox   Install VirtualBox guest utilities
-#   -x, --xorg   Configure GNOME to use only Xorg and disable Wayland
-#   -d, --drive  Drive name to install Arch Linux, /dev/sda by default
-# Example:
-#   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)" '' -px
-
-
 set -e
+function help () {
+cat <<EOF >&2
+Run script via curl:
+  sh -c "$(curl -s https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)"
+or equivalently:
+  sh -c "$(curl -sL https://v.gd/alisa)"
+or run version from development branch:
+  sh -c "$(curl -s https://gitlab.com/romanilin/alrc/-/raw/dev/install.sh)"
+
+Supported options:
+  -l, --lts            install linux-lts package instead of linux
+  -p, --post           run post-installation: grub, swapiness, pacman configuring, GNOME installation, etc.
+  -v, --vbox           install VirtualBox guest utilities
+  -x, --xorg           configure GNOME to use only Xorg and disable Wayland
+  -d, --drive <drive>  install Arch Linux to <drive>, /dev/sda by default
+TODO:
+  -H, --home           update rc-files and other configurations
+EOF
+exit
+}
 
 
 MIRRORS_COUNTRIES=(
@@ -132,9 +139,20 @@ APPS_TO_SHOW=(
 APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 
 
+function invalid_option () {
+	cat <<-EOF >&2
+		ALRC: invalid option -- '$1'
+		Try '--help' for more information.
+	EOF
+	exit 1
+}
+
+
 for option in "$@"; do
 	shift
 	case "$option" in
+		'--help')
+			set -- "$@" '-h' ;;
 		'--lts')
 			set -- "$@" '-l' ;;
 		'--post')
@@ -145,7 +163,7 @@ for option in "$@"; do
 			set -- "$@" '-x' ;;
 		'--drive')
 			set -- "$@" '-d' ;;
-		*)  [ "$option" = --* ] && echo "unknown option \"$option\"" >&2
+		*)  [ "$option" == --* ] && invalid_option "$option"
 			set -- "$@" "$option"
 	esac
 done
@@ -157,14 +175,15 @@ XORG=false
 DRIVE='/dev/sda'
 
 OPTIND=1
-while getopts ':d:lpvx' option; do
+while getopts ':d:hlpvx' option; do
 	case "$option" in
+		h) help ;;
 		d) DRIVE="$OPTARG" ;;
 		l) LTS=true ;;
 		p) MODE='post' ;;
 		v) VBOX=true ;;
 		x) XORG=true ;;
-		?) echo "unknown option \"$option\"" >&2
+		?) invalid_option "$option"
 	esac
 done
 shift $((OPTIND-1))
