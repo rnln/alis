@@ -11,7 +11,126 @@
 # Example:
 #   sh -c "$(curl -fsSL https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)" '' -px
 
+
 set -e
+
+
+MIRRORS_COUNTRIES=(
+	'Austria'
+	'Belarus'
+	'Czechia'
+	'Denmark'
+	'Finland'
+	'Germany'
+	'Hungary'
+	'Latvia'
+	'Lithuania'
+	'Moldova'
+	'Norway'
+	'Poland'
+	'Romania'
+	'Russia'
+	'Slovakia'
+	'Sweden'
+	'Ukraine'
+)
+MIRRORS_COUNTRIES=`printf ',%s' "${MIRRORS_COUNTRIES[@]}" | cut -c 2-`
+
+FONTS_PACKAGES=(
+	'ttf-jetbrains-mono'
+	'ttf-nerd-fonts-symbols-mono'
+	'noto-fonts'
+	'noto-fonts-emoji'
+	'noto-fonts-cjk'
+)
+
+GNOME_PACKAGES=(
+	'gdm'
+	'gnome-terminal'
+	'jack2'
+	'gnome-control-center'
+	'nautilus'
+	'gnome-themes-extra'
+	'chrome-gnome-shell'
+	'gnome-tweaks'
+	'eog'
+)
+
+ADDITIONAL_PACKAGES=(
+	'man'
+	'vim'
+	'xdg-user-dirs'
+	'chromium'
+	'code'
+	'kitty'
+	'inetutils'
+	'p7zip'
+	'python-pip'
+	'qalculate-gtk'
+	'telegram-desktop'
+	'transmission-gtk'
+	'vlc'
+	'xcursor-openzone'
+	'youtube-dl'
+	'keepassxc'
+	'libgnome-keyring'
+	'fuse2'
+)
+
+# https://addons.mozilla.org/addon/${addon}/
+FIREFOX_ADDONS=(
+	'copy-selected-tabs-to-clipboar'
+	'darkvk'
+	'default-bookmark-folder'
+	'gnome-shell-integration'
+	'image-search-options'
+	'keepassxc-browser'
+	'tampermonkey'
+	'wappalyzer'
+	# Privacy add-ons
+	'decentraleyes'
+	'dont-touch-my-tabs'
+	'dont-track-me-google1'
+	'facebook-container'
+	'google-container'
+	'nano-defender-firefox'
+	'nohttp'
+	'noscript'
+	'privacy-badger17'
+	'privacy-possum'
+	'smart-referer'
+	'uaswitcher'
+	'ublock-origin'
+)
+
+GNOME_EXTENSIONS=(
+	'7/removable-drive-menu'
+	'19/user-themes'
+	'517/caffeine'
+	'779/clipboard-indicator'
+	'800/remove-dropdown-arrows'
+	'1010/archlinux-updates-indicator'
+	'1031/topicons'
+	'1112/screenshot-tool'
+	'1236/noannoyance'
+	'1526/notification-centerselenium-h'
+	'3396/color-picker'
+)
+
+# Applications not to move to folder 'Other' in GNOME applications' list
+APPS_TO_SHOW=(
+	'chromium'
+	'code-oss'
+	'kitty'
+	'librewolf'
+	'org.gnome.Nautilus'
+	'qalculate-gtk'
+	'telegramdesktop'
+	'transmission-gtk'
+	'virtualbox'
+)
+APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
+
 
 for option in "$@"; do
 	shift
@@ -52,9 +171,8 @@ shift $((OPTIND-1))
 [ "${1:-}" = '--' ] && shift
 
 
-MIRRORS_COUNTRIES='Austria,Belarus,Czechia,Denmark,Finland,Germany,Hungary,Latvia,Lithuania,Moldova,Norway,Poland,Romania,Russia,Slovakia,Sweden,Ukraine'
-SUDO=$([ "$EUID" == 0 ] || echo sudo)
-CHROOT=$([ "$MODE" == 'post' ] || echo arch-chroot /mnt)
+[ "$EUID" == 0 ] || SUDO=sudo
+[ "$MODE" == 'post' ] || CHROOT=arch-chroot /mnt
 
 
 setup_terminal_colors () {
@@ -76,12 +194,12 @@ setup_terminal_colors () {
 
 log () {
 	# log function
-	# -i DEPTH  Add indent in message beggining
-	# -s        Print "Started ..." message
-	# -f        Print "Finished ..." message
-	# -n        Prevent line break
-	# -e        End message with provided string, '.' by default
-	# -w        Wrap message with provided escape sequence
+	# -i <depth>  Add indent in message beggining
+	# -s          Print "Started ..." message
+	# -f          Print "Finished ..." message
+	# -n          Prevent line break
+	# -e          End message with provided string, '.' by default
+	# -w          Wrap message with provided escape sequence
 
 	local OPTIND=1
 	local DEPTH=0
@@ -136,7 +254,9 @@ setup_color_scheme () {
 	export FOREGROUND=$WHITE
 	export BACKGROUND=$BLACK
 	export BACKGROUND_HIGHLIGHT='#1f4871' # #3298ff66 on #121212 background
+
 	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
+	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT'
 }
 
 
@@ -393,11 +513,13 @@ install_post () {
 	log -s 'pacman configuring'
 	sudo pacman -Syyu --noconfirm --needed
 	install_packages reflector
-	sudo sh -c "echo '--save /etc/pacman.d/mirrorlist' >/etc/xdg/reflector/reflector.conf"
-	sudo sh -c "echo '--protocol https' >>/etc/xdg/reflector/reflector.conf"
-	sudo sh -c "echo '--country $MIRRORS_COUNTRIES' >>/etc/xdg/reflector/reflector.conf"
-	sudo sh -c "echo '--sort rate' >>/etc/xdg/reflector/reflector.conf"
-	sudo sh -c "echo '--fastest 5' >>/etc/xdg/reflector/reflector.conf"
+	sudo sh -c "cat <<-EOF >/etc/xdg/reflector/reflector.conf
+		--save /etc/pacman.d/mirrorlist
+		--protocol https
+		--country $MIRRORS_COUNTRIES
+		--sort rate
+		--fastest 5
+	EOF"
 	sudo systemctl enable --now reflector.timer
 	log -f 'pacman configuring'
 
@@ -410,29 +532,11 @@ install_post () {
 	log -f 'paru installation'
 
 	log -s 'fonts installation'
-	fonts_packages=(
-		'ttf-jetbrains-mono'
-		'ttf-nerd-fonts-symbols-mono'
-		'noto-fonts'
-		'noto-fonts-emoji'
-		'noto-fonts-cjk'
-	)
-	install_packages -a "${fonts_packages[@]}"
+	install_packages -a "${FONTS_PACKAGES[@]}"
 	log -f 'fonts installation'
 
 	log -s 'GNOME installation'
-	gnome_packages=(
-		'gdm'
-		'gnome-terminal'
-		'jack2'
-		'gnome-control-center'
-		'nautilus'
-		'gnome-themes-extra'
-		'chrome-gnome-shell'
-		'gnome-tweaks'
-		'eog'
-	)
-	install_packages -a "${gnome_packages[@]}"
+	install_packages -a "${GNOME_PACKAGES[@]}"
 	sudo systemctl enable gdm
 	log -f 'GNOME installation'
 
@@ -465,31 +569,14 @@ install_post () {
 	log -f 'ufw installation'
 
 	log -s 'additional packages installation'
-	additional_packages=(
-		'man'
-		'vim'
-		'xdg-user-dirs'
-		'chromium'
-		'code'
-		'kitty'
-		'inetutils'
-		'p7zip'
-		'python-pip'
-		'qalculate-gtk'
-		'telegram-desktop'
-		'transmission-gtk'
-		'vlc'
-		'xcursor-openzone'
-		'youtube-dl'
-		'keepassxc'
-		'libgnome-keyring'
-		'fuse2'
-	)
-	install_packages -a "${additional_packages[@]}"
-	if [ "$VBOX" == true ]; then
-		install_packages virtualbox
-	fi
+	install_packages -a "${ADDITIONAL_PACKAGES[@]}"
 	log -f 'additional packages installation'
+
+	if [ "$VBOX" == true ]; then
+		log -s 'VirtualBox guest utilities installation'
+		install_vbox_guest_utils
+		log -f 'VirtualBox guest utilities installation'
+	fi
 
 	log -s 'runtime configuration files cloning'
 	install_packages -a rsync
@@ -500,72 +587,44 @@ install_post () {
 	rm -rf "$tempdir/README.md"
 	rsync -a "$tempdir/" "$HOME/"
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] || ssh-keygen -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     || ssh-keygen -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] && ssh-keygen -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     && ssh-keygen -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
 	eval "$(ssh-agent -s)"
 	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
 	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
 		[ -f $file ] && ssh-add $file
 	done
-	sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
-	paru -Sy
-	envsubst '$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT' <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
+	sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf && paru -Sy
+	envsubst "$COLORS_LIST" <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
 	sudo mkdir /usr/lib/electron/bin
 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 
-
-	# install_packages -a librewolf-bin
 	graphql='[{
-		"operationName": "allReleases",
-		"variables": { "fullPath": "librewolf-community/browser/linux", "first": 1 },
-		"query": "query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release {assets{links{nodes{name url}}}}"
+		"operationName":"allReleases",
+		"variables":{"fullPath":"librewolf-community/browser/linux","first":1},
+		"query":"query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release{assets{links{nodes{name url}}}}"
 	}]'
-	rm -rf "$XDG_DATA_HOME/librewolf"
-	appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$graphql" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
+	appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$graphql"`
+	appimage_url=`echo "$appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
 	mkdir "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$appimage_url"
 	chmod +x "$XDG_DATA_HOME/librewolf/librewolf.AppImage"
 	sudo ln -s "$XDG_DATA_HOME/librewolf/librewolf.AppImage" /usr/local/bin/librewolf
 	librewolf --appimage-portable-home
-	LIBREWOLF_HOME="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
-	addons_list=(
-		# https://addons.mozilla.org/addon/${addon}/
-		'copy-selected-tabs-to-clipboar'
-		'darkvk'
-		'default-bookmark-folder'
-		'gnome-shell-integration'
-		'image-search-options'
-		'keepassxc-browser'
-		'tampermonkey'
-		'wappalyzer'
-		# Privacy
-		'decentraleyes'
-		'dont-touch-my-tabs'
-		'dont-track-me-google1'
-		'facebook-container'
-		'google-container'
-		'nano-defender-firefox'
-		'nohttp' # 'https-everywhere'
-		'noscript'
-		'privacy-badger17'
-		'privacy-possum'
-		'smart-referer'
-		'uaswitcher'
-		'ublock-origin'
-	)
-	mkdir -p "$LIBREWOLF_HOME/.librewolf/default/extensions"
+	librewolf_home="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
+	mkdir -p "$librewolf_home/.librewolf/default/extensions"
 	addons_root="https://addons.mozilla.org/firefox"
 	log -s -i 1 'Firefox add-ons installation'
-	for addon in "${addons_list[@]}"; do
+	for addon in "${FIREFOX_ADDONS[@]}"; do
 		log -i 2 -w "${ES_RESET}" -e '...' "$addon"
 		addon_page="$(curl -sL "$addons_root/addon/$addon")"
 		addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
 		xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
-		curl -fsSL "$xpi_url" -o "$LIBREWOLF_HOME/.librewolf/default/extensions/$addon_guid.xpi"
+		curl -fsSL "$xpi_url" -o "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi"
 	done
 	log -f -i 1 'Firefox add-ons installation'
-	envsubst '$USER,$HOST' <"$tempdir/.librewolf/default/user.js" >"$LIBREWOLF_HOME/.librewolf/default/user.js"
+	envsubst '$USER,$HOST' <"$tempdir/.librewolf/default/user.js" >"$librewolf_home/.librewolf/default/user.js"
 	rm -rf "$tempdir"
-	echo "librewolf -createprofile 'Default $LIBREWOLF_HOME/.librewolf/default'" >"$HOME/librewolf.sh"
+	echo "librewolf -createprofile 'Default $librewolf_home/.librewolf/default'" >"$HOME/librewolf.sh"
 	echo "librewolf -P </dev/null &>/dev/null &" >>"$HOME/librewolf.sh"
 	echo "rm '$HOME/librewolf.sh'" >>"$HOME/librewolf.sh"
 	chmod +x "$HOME/librewolf.sh"
@@ -590,59 +649,30 @@ install_post () {
 	log -f 'GDM configuring'
 
 	log -s 'GNOME configuring'
-	# https://superuser.com/questions/1359253/how-to-remove-starred-tab-in-gnomes-nautilus
+	[ "$XORG" == true ] && sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
 
-	if [ "$XORG" == true ]; then
-		sudo sed -i 's/^#\(WaylandEnable=false\)/\1/' /etc/gdm/custom.conf
-	fi
-
-	export terminal_profile="$(uuidgen)"
-
-	apps_to_show=(
-		'chromium'
-		'code-oss'
-		'kitty'
-		'librewolf'
-		'org.gnome.Nautilus'
-		'qalculate-gtk'
-		'telegramdesktop'
-		'transmission-gtk'
-		'virtualbox'
-	)
-	apps_to_show=`printf '\|%s' "${apps_to_show[@]}" | cut -c 3-` # join with "\|"
 	export apps_to_hide=$(ls -A1 /usr/share/applications | grep .desktop$)
-	apps_to_hide=$(grep -v "\($apps_to_show\).desktop" <<<$apps_to_hide)
+	apps_to_hide=$(grep -v "\($APPS_TO_SHOW\).desktop" <<<$apps_to_hide)
 	apps_to_hide=$(awk '{ print $0 }' RS='\n' ORS="', '" <<<$apps_to_hide)
 	apps_to_hide=[\'${apps_to_hide::-4}\']
 
-	EXTENSIONS=(
-		'7/removable-drive-menu'
-		'19/user-themes'
-		'517/caffeine'
-		'779/clipboard-indicator'
-		'800/remove-dropdown-arrows'
-		'1010/archlinux-updates-indicator'
-		'1031/topicons'
-		'1112/screenshot-tool'
-		'1236/noannoyance'
-		'1526/notification-centerselenium-h'
-		'3396/color-picker'
-	)
 	tempdir=$(mktemp -d)
-	EXTENSIONS_ROOT='https://extensions.gnome.org'
-	GNOME_SHELL_VERSION="$(gnome-shell --version | awk '{print $NF}')"
-	for EXTENSION in "${EXTENSIONS[@]}"; do
-		DATA_UUID="$(curl $EXTENSIONS_ROOT/extension/$EXTENSION/ -so - | awk -F\" '/data-uuid/ {print $2}')"
-		EXTENSION_URL="$EXTENSIONS_ROOT/download-extension/$DATA_UUID.shell-extension.zip?shell_version=$GNOME_SHELL_VERSION"
-		EXTENSION_URL="$(curl -sI $EXTENSION_URL | awk '/Location:/ {print $2}' | tr -d '\r')"
-		sh -c "cd '$tempdir' && curl -fsSLO '$EXTENSIONS_ROOT$EXTENSION_URL'"
+	extensions_root='https://extensions.gnome.org'
+	gnome_shell_version="$(gnome-shell --version | awk '{print $NF}')"
+	for extension in "${GNOME_EXTENSIONS[@]}"; do
+		data_uuid="$(curl $extensions_root/extension/$extension/ -so - | awk -F\" '/data-uuid/ {print $2}')"
+		extension_url="$extensions_root/download-extension/$data_uuid.shell-extension.zip?shell_version=$gnome_shell_version"
+		extension_url="$(curl -sI $extension_url | awk '/Location:/ {print $2}' | tr -d '\r')"
+		sh -c "cd '$tempdir' && curl -fsSLO '$extensions_root$extension_url'"
 		gnome-extensions install -f $tempdir/*.zip
-		gnome-extensions enable $DATA_UUID
+		gnome-extensions enable $data_uuid
 		rm $tempdir/*
 	done
 	rm -rf "$tempdir"
-	find "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet" \( -type d -name .git -prune \) -o -type f -print0 | xargs -0 sed -i 's/Up to date :)/Up to date/g'
+	find "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet" \( -type d -name .git -prune \) -o -type f -print0 \
+		| xargs -0 sed -i 's/\(Up to date\) :)/\1/g'
 
+	export terminal_profile="$(uuidgen)"
 	envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$apps_to_hide,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
 	rm "$HOME/.config/dconf/dump.ini"
 	log -f 'GNOME configuring'
@@ -655,9 +685,7 @@ install_post () {
 
 	log -s 'pacman clearing up'
 	orphans="$(pacman -Qtdq | tee)"
-	if [[ -n "$orphans" ]]; then
-		sudo pacman -Rcns --noconfirm "$orphans"
-	fi
+	[[ -n "$orphans" ]] && sudo pacman -Rcns --noconfirm "$orphans"
 	sudo pacman -Scc --noconfirm
 	log -f 'pacman clearing up'
 
