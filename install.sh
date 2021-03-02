@@ -567,7 +567,7 @@ install_post () {
 	rm -rf "$tempdir"
 	echo "librewolf -createprofile 'Default $LIBREWOLF_HOME/.librewolf/default'" >"$HOME/librewolf.sh"
 	echo "librewolf -P </dev/null &>/dev/null &" >>"$HOME/librewolf.sh"
-	echo "rm '$HOME/librewolf.sh' >>"$HOME/librewolf.sh"
+	echo "rm '$HOME/librewolf.sh'" >>"$HOME/librewolf.sh"
 	chmod +x "$HOME/librewolf.sh"
 	log -f 'runtime configuration files cloning'
 
