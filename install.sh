@@ -361,9 +361,15 @@ install_base () {
 install_post () {
 	log -s -w "${ES_CYAN}" 'Arch Linux post-installation'
 
-	export XDG_CONFIG_HOME="$HOME/.config"
+	# XDG Base Directory specification
+	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME/.cache"}
+	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+
 	export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 	mkdir -p "$GNUPGHOME"
+	chmod 700 "$GNUPGHOME"
 
 	log -s 'sudo timeout preventing'
 	command -v sudo >/dev/null 2>&1 || {
@@ -466,7 +472,6 @@ install_post () {
 		'chromium'
 		'code'
 		'kitty'
-		'librewolf-bin'
 		'inetutils'
 		'p7zip'
 		'python-pip'
@@ -478,6 +483,7 @@ install_post () {
 		'youtube-dl'
 		'keepassxc'
 		'libgnome-keyring'
+		'fuse'
 	)
 	install_packages -a "${additional_packages[@]}"
 	if [ "$VBOX" == true ]; then
@@ -493,10 +499,9 @@ install_post () {
 	rm -rf "$tempdir/LICENSE"
 	rm -rf "$tempdir/README.md"
 	rsync -a "$tempdir/" "$HOME/"
-	chmod 700 "$XDG_CONFIG_HOME/gnupg"
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
-	ssh-keygen -P '' -t ed25519 -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
-	ssh-keygen -P '' -o -t rsa -b 4096 -f "$XDG_CONFIG_HOME/ssh/id_rsa"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] || ssh-keygen -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     || ssh-keygen -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
 	eval "$(ssh-agent -s)"
 	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
 	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
@@ -504,9 +509,24 @@ install_post () {
 	done
 	sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
 	paru -Sy
+	envsubst '$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT' <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
 	sudo mkdir /usr/lib/electron/bin
 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
-	# generate Firefox add-ons list for "runOncePerModification.extensionsInstall" preference
+
+
+	# install_packages -a librewolf-bin
+	graphql='[{
+		"operationName": "allReleases",
+		"variables": { "fullPath": "librewolf-community/browser/linux", "first": 1 },
+		"query": "query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release {assets{links{nodes{name url}}}}"
+	}]'
+	rm -rf "$XDG_DATA_HOME/librewolf"
+	appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$graphql" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
+	mkdir "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$appimage_url"
+	chmod +x "$XDG_DATA_HOME/librewolf/librewolf.AppImage"
+	sudo ln -s "$XDG_DATA_HOME/librewolf/librewolf.AppImage" /usr/local/bin/librewolf
+	librewolf --appimage-portable-home
+	LIBREWOLF_HOME="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
 	addons_list=(
 		# https://addons.mozilla.org/addon/${addon}/
 		'copy-selected-tabs-to-clipboar'
@@ -532,19 +552,23 @@ install_post () {
 		'uaswitcher'
 		'ublock-origin'
 	)
-	mkdir -p "$HOME/.librewolf/default/extensions"
+	mkdir -p "$LIBREWOLF_HOME/.librewolf/default/extensions"
 	addons_root="https://addons.mozilla.org/firefox"
 	log -s -i 1 'Firefox add-ons installation'
 	for addon in "${addons_list[@]}"; do
-		log -i 2 -w "${ES_RESET}" -e '...' "\"$addon\" installation"
+		log -i 2 -w "${ES_RESET}" -e '...' "$addon"
 		addon_page="$(curl -sL "$addons_root/addon/$addon")"
 		addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
 		xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
-		curl -fsSL "$xpi_url" -o "$HOME/.librewolf/default/extensions/$addon_guid.xpi"
+		curl -fsSL "$xpi_url" -o "$LIBREWOLF_HOME/.librewolf/default/extensions/$addon_guid.xpi"
 	done
 	log -f -i 1 'Firefox add-ons installation'
-	envsubst '$USER,$HOST' <"$tempdir/.librewolf/default/user.js" >"$HOME/.librewolf/default/user.js"
+	envsubst '$USER,$HOST' <"$tempdir/.librewolf/default/user.js" >"$LIBREWOLF_HOME/.librewolf/default/user.js"
 	rm -rf "$tempdir"
+	echo "librewolf -createprofile 'Default $LIBREWOLF_HOME/.librewolf/default'" >"$HOME/librewolf.sh"
+	echo "librewolf -P </dev/null &>/dev/null &" >>"$HOME/librewolf.sh"
+	echo "rm '$HOME/librewolf.sh' >>"$HOME/librewolf.sh"
+	chmod +x "$HOME/librewolf.sh"
 	log -f 'runtime configuration files cloning'
 
 	log -s 'GDM configuring'
