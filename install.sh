@@ -145,7 +145,7 @@ for option in "$@"; do
 			set -- "$@" '-x' ;;
 		'--drive')
 			set -- "$@" '-d' ;;
-		*)  [ "$option" = --* ] && echo "unknown option \"$option\"" >&2; exit 1
+		*)  [ "$option" = --* ] && echo "unknown option \"$option\"" >&2
 			set -- "$@" "$option"
 	esac
 done
@@ -165,7 +165,6 @@ while getopts ':d:lpvx' option; do
 		v) VBOX=true ;;
 		x) XORG=true ;;
 		?) echo "unknown option \"$option\"" >&2
-		   exit 1
 	esac
 done
 shift $((OPTIND-1))
