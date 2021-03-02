@@ -3,11 +3,11 @@ set -e
 function help () {
 cat <<EOF >&2
 Run script via curl:
-  sh -c "$(curl -s https://gitlab.com/romanilin/alrc/-/raw/main/install.sh)"
+  sh -c "$(curl -s https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
 or equivalently:
   sh -c "$(curl -sL https://v.gd/alisa)"
 or run version from development branch:
-  sh -c "$(curl -s https://gitlab.com/romanilin/alrc/-/raw/dev/install.sh)"
+  sh -c "$(curl -s https://gitlab.com/romanilin/alis/-/raw/dev/install.sh)"
 
 Supported options:
   -l, --lts            install linux-lts package instead of linux
@@ -141,7 +141,7 @@ APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 
 function invalid_option () {
 	cat <<-EOF >&2
-		ALRC: invalid option -- '$1'
+		ALIS: invalid option -- '$1'
 		Try '--help' for more information.
 	EOF
 	exit 1
@@ -247,7 +247,7 @@ log () {
 		PADDING="${ES_CYAN}${PADDING}>${ES_RESET} "
 	fi
 
-	printf "${ES_BOLD}${ES_CYAN}[ALRC]${ES_RESET} ${PADDING}${STATUS}${FORMAT}$@${ES_RESET}${END}${NEWLINE}" >&2
+	printf "${ES_BOLD}${ES_CYAN}[ALIS]${ES_RESET} ${PADDING}${STATUS}${FORMAT}$@${ES_RESET}${END}${NEWLINE}" >&2
 }
 
 
