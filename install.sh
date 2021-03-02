@@ -483,7 +483,7 @@ install_post () {
 		'youtube-dl'
 		'keepassxc'
 		'libgnome-keyring'
-		'fuse'
+		'fuse2'
 	)
 	install_packages -a "${additional_packages[@]}"
 	if [ "$VBOX" == true ]; then
