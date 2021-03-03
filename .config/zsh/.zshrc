@@ -13,14 +13,14 @@ export SAVEHIST=100000
 
 export PAGER=less
 export LESS='-ciJMR +Gg'
-export LESSHISTFILE="$XDG_CACHE_HOME/.lesshist"
+export LESSHISTFILE="$XDG_CACHE_HOME/lesshist"
 # terminfo capabilities to stylize man pages
-export LESS_TERMCAP_md=$(tput setaf 2) # start bold
-export LESS_TERMCAP_me=$(tput sgr0) # end blink and bold
-export LESS_TERMCAP_so=$(tput setaf 7; tput setab 4) # start standout-mode
-export LESS_TERMCAP_se=$(tput sgr0) # end standout-mode
-export LESS_TERMCAP_us=$(tput setaf 4) # start underline
-export LESS_TERMCAP_ue=$(tput sgr0) # end underline
+export LESS_TERMCAP_md=$(tput setaf 2; tput bold) # start bold (green)
+export LESS_TERMCAP_me=$(tput sgr0)               # end all attributes
+export LESS_TERMCAP_so=$(tput setaf 4; tput smso) # start standout-mode (blue background)
+export LESS_TERMCAP_se=$(tput sgr0)               # end standout-mode
+export LESS_TERMCAP_us=$(tput setaf 4; tput smul) # start underline (blue)
+export LESS_TERMCAP_ue=$(tput sgr0)               # end underline
 
 export EDITOR=vim
 export VIMINIT='source "$XDG_CONFIG_HOME/vim/vimrc"'
