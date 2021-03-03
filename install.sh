@@ -15,8 +15,7 @@ Supported options:
   -v, --vbox           install VirtualBox guest utilities
   -x, --xorg           configure GNOME to use only Xorg and disable Wayland
   -d, --drive <drive>  install Arch Linux to <drive>, /dev/sda by default
-TODO:
-  -H, --home           update rc-files and other configurations
+  -u, --update         just update rc-files and other configurations
 EOF
 exit
 }
@@ -142,7 +141,7 @@ APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 function invalid_option () {
 	cat <<-EOF >&2
 		ALIS: invalid option -- '$1'
-		Try '--help' for more information.
+		Try run with '--help' option for more information.
 	EOF
 	exit 1
 }
@@ -153,6 +152,8 @@ for option in "$@"; do
 	case "$option" in
 		'--help')
 			set -- "$@" '-h' ;;
+		'--update')
+			set -- "$@" '-u' ;;
 		'--lts')
 			set -- "$@" '-l' ;;
 		'--post')
@@ -173,11 +174,13 @@ MODE='base'
 VBOX=false
 XORG=false
 DRIVE='/dev/sda'
+UPDATE_CONFIGURATION=false
 
 OPTIND=1
-while getopts ':d:hlpvx' option; do
+while getopts ':d:hlpuvx' option; do
 	case "$option" in
 		h) help ;;
+		u) UPDATE_CONFIGURATION=true ;;
 		d) DRIVE="$OPTARG" ;;
 		l) LTS=true ;;
 		p) MODE='post' ;;
@@ -194,7 +197,7 @@ shift $((OPTIND-1))
 [ "$MODE" == 'post' ] || CHROOT=arch-chroot /mnt
 
 
-setup_terminal_colors () {
+function setup_terminal_colors () {
 	# only use colors if connected to a terminal
 	if [ -t 1 ]; then
 		ES_BLACK=`tput setaf 0`
@@ -211,7 +214,7 @@ setup_terminal_colors () {
 }
 
 
-log () {
+function log () {
 	# log function
 	# -i <depth>  Add indent in message beggining
 	# -s          Print "Started ..." message
@@ -251,7 +254,7 @@ log () {
 }
 
 
-setup_color_scheme () {
+function setup_color_scheme () {
 	export BLACK='#121212'
 	export RED='#ff714f'
 	export GREEN='#00d965'
@@ -279,7 +282,7 @@ setup_color_scheme () {
 }
 
 
-check_system_errors () {
+function check_system_errors () {
 	log -e ':' 'System errors information'
 	log -i 1 -e ':' 'systemctl --failed'
 	PAGER= $SUDO systemctl --failed
@@ -302,13 +305,13 @@ check_system_errors () {
 }
 
 
-revert_sudoers () {
+function revert_sudoers () {
 	# revert original /etc/sudoers after preventing sudo timeout
 	[ -f '/etc/sudoers.bak' ] && sudo mv /etc/sudoers.bak /etc/sudoers
 }
 
 
-ask_to_reboot () {
+function ask_to_reboot () {
 	while true; do
 		log -n -e '? [Y/n] ' 'Reboot now'
 		read -e answer
@@ -325,24 +328,174 @@ ask_to_reboot () {
 }
 
 
-install_packages () {
-	case $1 in
-		-a) shift
-			paru -S --noconfirm --needed "$@" ;;
-		*) $SUDO pacman -S --noconfirm --needed "$@"
-	esac
+function install_packages () {
+	pacman -Q paru &>/dev/null && command='paru' || command="$SUDO pacman"
+	$command -S --noconfirm --needed "$@"
 }
 
 
-install_vbox_guest_utils () {
+function install_vbox_guest_utils () {
 	$CHROOT sh -c "pacman -Q linux 2>/dev/null || $SUDO pacman -S --noconfirm --needed virtualbox-guest-dkms"
 	$CHROOT $SUDO pacman -S --noconfirm --needed virtualbox-guest-utils
 	$CHROOT $SUDO systemctl enable vboxservice
 	if [ "$MODE" == 'post' ]; then $SUDO systemctl start vboxservice; fi
 }
 
+function ask () {
+	result=1
+	while true; do
+		log -n -e '? [Y/n] ' "$@"
+		read -e answer
+		case $answer in
+			[Nn]*)
+				break
+				;;
+			[Yy]*|'')
+				result=0
+				break
+				;;
+			*) log -i 1 'Try again'
+		esac
+	done
+	return $result
+}
 
-install_base () {
+function install_paru () {
+	install_packages base-devel git
+	local tempdir="$(mktemp -d)"
+	git clone https://aur.archlinux.org/paru-bin.git "$tempdir"
+	sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
+	rm -rf "$tempdir"
+}
+
+function update_configuration () {
+	# XDG Base Directory specification
+	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
+	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME/.cache"}
+	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+
+	if command -v pacman &>/dev/null; then
+		$SUDO pacman -Sy
+		install_packages rsync
+	elif command -v apt &>/dev/null; then
+		$SUDO apt update
+		$SUDO apt install rsync
+	elif command -v yum &>/dev/null; then
+		yum install rsync
+	fi
+	local tempdir="$(mktemp -d)"
+	git clone https://gitlab.com/romanilin/alis.git "$tempdir"
+	rm -rf "$tempdir/"{.git,install.sh,LICENSE,README.md}
+
+	# GNU Privacy Guard directory
+	export GNUPGHOME={GNUPGHOME:-"$XDG_CONFIG_HOME/gnupg"}
+	mkdir -p "$GNUPGHOME"
+	chmod 700 "$GNUPGHOME"
+	if [ -d "$HOME/.gnupg" ]; then
+		rsync -a "$HOME/.gnupg/" "$GNUPGHOME/"
+		rm -rf "$HOME/.gnupg"
+	fi
+	rsync -a "$tempdir/.config/gnupg/" "$GNUPGHOME/"
+	rm -rf "$tempdir/.config/gnupg"
+
+	# Secure Shell directory
+	mkdir -p "$XDG_CONFIG_HOME/ssh"
+	if [ -d "$HOME/.ssh" ]; then
+		rsync -a "$HOME/.ssh/" "$XDG_CONFIG_HOME/ssh/"
+		rm -rf "$HOME/.ssh"
+	fi
+	rsync -a "$tempdir/.config/ssh/" "$XDG_CONFIG_HOME/ssh/"
+	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] && ssh-keygen -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     && ssh-keygen -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
+	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
+	eval "$(ssh-agent -s)"
+	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
+		[ -f $file ] && ssh-add $file
+	done
+	rm -rf "$tempdir/.config/ssh"
+
+	# pacman and paru configuration
+	if [ -f /etc/pacman.conf ]; then
+		pacman -Q paru &>/dev/null || install_paru
+		sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
+		rsync -a "$tempdir/.config/paru/" "$XDG_CONFIG_HOME/paru/"
+		paru -Sy
+	fi
+	rm -rf "$tempdir/.config/paru/"
+	
+	envsubst "$COLORS_LIST" <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
+	rm -rf "$tempdir/.config/kitty"
+
+	if [ -d "$HOME/.vscode-oss" ]; then
+		rsync -a "$HOME/.vscode-oss/" "$XDG_DATA_HOME/vscode-oss/"
+		rm -rf "$HOME/.vscode-oss"
+	fi
+	if [ ! -f /usr/lib/electron/bin/code-oss ]; then
+		sudo mkdir -p /usr/lib/electron/bin
+		sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
+	fi
+	rsync -a "$tempdir/.config/Code - OSS/" "$XDG_CONFIG_HOME/Code - OSS/"
+	rm -rf "$tempdir/.config/Code - OSS"
+
+	local librewolf_home="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
+	if [ -d "$HOME/.librewolf" ]; then
+		rsync -a "$HOME/.librewolf/" "$librewolf_home/.librewolf/"
+		rm -rf "$HOME/.librewolf"
+		paru -Rcns librewolf
+	fi
+	if [ ! -f "$XDG_DATA_HOME/librewolf/librewolf.AppImage" ]; then
+		local librewolf_gitlab_graphql='[{
+			"operationName":"allReleases",
+			"variables":{"fullPath":"librewolf-community/browser/linux","first":1},
+			"query":"query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release{assets{links{nodes{name url}}}}"
+		}]'
+		local librewolf_appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$librewolf_gitlab_graphql"`
+		librewolf_appimage_url=`echo "$librewolf_appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
+		mkdir "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$librewolf_appimage_url"
+		chmod +x "$XDG_DATA_HOME/librewolf/librewolf.AppImage"
+		sudo ln -s "$XDG_DATA_HOME/librewolf/librewolf.AppImage" /usr/bin/librewolf
+		librewolf --appimage-portable-home
+	fi
+	if [ ! -f "$librewolf_home/.librewolf/installs.ini" ]; then
+		librewolf --headless </dev/null &>/dev/null &
+		local librewolf_pid=$!
+		while true; do
+			[ -f "$librewolf_home/.librewolf/installs.ini" ] && break
+			sleep 0.1
+		done
+		kill $librewolf_pid
+		rm -rf "$librewolf_home/.librewolf/"*.default*
+	fi
+	export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home/.librewolf/installs.ini"`
+	local librewolf_home_temp="$tempdir/.local/share/librewolf/librewolf.AppImage.home"
+	rsync -a "$librewolf_home_temp/.librewolf/" "$librewolf_home/.librewolf/"
+	envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/installs.ini" >"$librewolf_home/.librewolf/installs.ini"
+	envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/profiles.ini" >"$librewolf_home/.librewolf/profiles.ini"
+	envsubst '$USER,$HOST' <"$librewolf_home_temp/.librewolf/default/user.js" >"$librewolf_home/.librewolf/default/user.js"
+	rm -rf "$tempdir/.local/share/librewolf"
+
+	mkdir -p "$librewolf_home/.librewolf/default/extensions"
+	addons_root="https://addons.mozilla.org/firefox"
+	log -s -i 1 'Firefox add-ons installation'
+	for addon in "${FIREFOX_ADDONS[@]}"; do
+		log -i 2 -w "${ES_RESET}" -e '...' "$addon"
+		addon_page="$(curl -sL "$addons_root/addon/$addon")"
+		addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
+		if [ ! -f "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi" ]; do
+			xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
+			curl -fsSL "$xpi_url" -o "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi"
+		fi
+	done
+	log -f -i 1 'Firefox add-ons installation'
+
+	rsync -a "$tempdir/" "$HOME/"
+	rm -rf "$tempdir"
+}
+
+
+function install_base () {
 	log -s -w "${ES_CYAN}" 'Arch Linux base installation'
 
 	log -s 'getting user data'
@@ -497,7 +650,7 @@ install_base () {
 }
 
 
-install_post () {
+function install_post () {
 	log -s -w "${ES_CYAN}" 'Arch Linux post-installation'
 
 	# XDG Base Directory specification
@@ -543,24 +696,20 @@ install_post () {
 	log -f 'pacman configuring'
 
 	log -s 'paru installation'
-	install_packages base-devel git
-	local tempdir="$(mktemp -d)"
-	git clone https://aur.archlinux.org/paru-bin.git "$tempdir"
-	sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
-	rm -rf "$tempdir"
+	install_paru
 	log -f 'paru installation'
 
 	log -s 'fonts installation'
-	install_packages -a "${FONTS_PACKAGES[@]}"
+	install_packages "${FONTS_PACKAGES[@]}"
 	log -f 'fonts installation'
 
 	log -s 'GNOME installation'
-	install_packages -a "${GNOME_PACKAGES[@]}"
+	install_packages "${GNOME_PACKAGES[@]}"
 	sudo systemctl enable gdm
 	log -f 'GNOME installation'
 
 	log -s 'zsh installation'
-	install_packages -a zsh starship-bin
+	install_packages zsh starship-bin
 	sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME/.config\"' >/etc/zsh/zshenv"
 	sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME/zsh\"' >>/etc/zsh/zshenv"
 	sudo chsh -s "$(which zsh)" "$(whoami)"
@@ -571,7 +720,7 @@ install_post () {
 	log -f 'zsh installation'
 
 	log -s 'OpenSSH installation'
-	install_packages -a openssh
+	install_packages openssh
 	sudo sh -c 'echo "DisableForwarding yes # disable all forwarding features (overrides all other forwarding-related options)" >>/etc/ssh/sshd_config'
 	sudo sed -i 's/^#\(IgnoreRhosts\).*/\1 yes/' /etc/ssh/sshd_config
 	sudo sed -i "s/^#\(AuthorizedKeysFile\).*/\1 .config\/ssh\/authorized_keys/" /etc/ssh/sshd_config
@@ -581,14 +730,14 @@ install_post () {
 	log -f 'OpenSSH installation'
 
 	log -s 'ufw installation'
-	install_packages -a ufw
+	install_packages ufw
 	sudo ufw limit ssh
 	sudo ufw allow transmission
 	sudo systemctl enable --now ufw
 	log -f 'ufw installation'
 
 	log -s 'additional packages installation'
-	install_packages -a "${ADDITIONAL_PACKAGES[@]}"
+	install_packages "${ADDITIONAL_PACKAGES[@]}"
 	log -f 'additional packages installation'
 
 	if [ "$VBOX" == true ]; then
@@ -598,55 +747,7 @@ install_post () {
 	fi
 
 	log -s 'runtime configuration files cloning'
-	install_packages -a rsync
-	tempdir="$(mktemp -d)"
-	git clone https://gitlab.com/romanilin/alis.git "$tempdir"
-	rm -rf "$tempdir/.git"
-	rm -rf "$tempdir/LICENSE"
-	rm -rf "$tempdir/README.md"
-	rsync -a "$tempdir/" "$HOME/"
-	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] && ssh-keygen -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     && ssh-keygen -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
-	eval "$(ssh-agent -s)"
-	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
-	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
-		[ -f $file ] && ssh-add $file
-	done
-	sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf && paru -Sy
-	envsubst "$COLORS_LIST" <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
-	sudo mkdir /usr/lib/electron/bin
-	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
-
-	graphql='[{
-		"operationName":"allReleases",
-		"variables":{"fullPath":"librewolf-community/browser/linux","first":1},
-		"query":"query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release{assets{links{nodes{name url}}}}"
-	}]'
-	appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$graphql"`
-	appimage_url=`echo "$appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
-	mkdir "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$appimage_url"
-	chmod +x "$XDG_DATA_HOME/librewolf/librewolf.AppImage"
-	sudo ln -s "$XDG_DATA_HOME/librewolf/librewolf.AppImage" /usr/local/bin/librewolf
-	librewolf --appimage-portable-home
-	librewolf_home="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
-	mkdir -p "$librewolf_home/.librewolf/default/extensions"
-	addons_root="https://addons.mozilla.org/firefox"
-	log -s -i 1 'Firefox add-ons installation'
-	for addon in "${FIREFOX_ADDONS[@]}"; do
-		log -i 2 -w "${ES_RESET}" -e '...' "$addon"
-		addon_page="$(curl -sL "$addons_root/addon/$addon")"
-		addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
-		xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
-		curl -fsSL "$xpi_url" -o "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi"
-	done
-	log -f -i 1 'Firefox add-ons installation'
-	envsubst '$USER,$HOST' <"$tempdir/.librewolf/default/user.js" >"$librewolf_home/.librewolf/default/user.js"
-	rm -rf "$tempdir"
-	echo "librewolf -createprofile 'Default $librewolf_home/.librewolf/default'" >"$HOME/librewolf.sh"
-	echo "librewolf -P </dev/null &>/dev/null &" >>"$HOME/librewolf.sh"
-	echo "rm '$HOME/librewolf.sh'" >>"$HOME/librewolf.sh"
-	chmod +x "$HOME/librewolf.sh"
+	update_configuration
 	log -f 'runtime configuration files cloning'
 
 	log -s 'GDM configuring'
@@ -717,9 +818,11 @@ install_post () {
 
 
 setup_terminal_colors
+setup_color_scheme
 
-if [ "$MODE" == 'post' ]; then
-	setup_color_scheme
+if [ "$UPDATE_CONFIGURATION" == true ]; then
+	update_configuration
+elif [ "$MODE" == 'post' ]; then
 	install_post
 else
 	install_base
