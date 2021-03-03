@@ -3,11 +3,11 @@ set -e
 function help () {
 cat <<EOF >&2
 Run script via curl:
-  sh -c "$(curl -s https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
+  sh -c "\$(curl -s https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
 or equivalently:
-  sh -c "$(curl -sL https://v.gd/alisa)"
+  sh -c "\$(curl -sL https://v.gd/alisa)"
 or run version from development branch:
-  sh -c "$(curl -s https://gitlab.com/romanilin/alis/-/raw/dev/install.sh)"
+  sh -c "\$(curl -s https://gitlab.com/romanilin/alis/-/raw/dev/install.sh)"
 
 Supported options:
   -l, --lts            install linux-lts package instead of linux
