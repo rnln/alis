@@ -25,6 +25,7 @@ export LESS_TERMCAP_ue=$(tput sgr0)               # end underline
 export EDITOR=vim
 export VIMINIT='source "$XDG_CONFIG_HOME/vim/vimrc"'
 
+# http://zsh.sourceforge.net/Doc/Release/Options.html
 setopt autocd          # if a command is issued that can't be executed as a normal command, and the command is the name of a directory, perform the cd command to that directory
 setopt autopushd       # make cd push the old directory onto the directory stack
 setopt completeinword  # not just at the end
@@ -39,11 +40,12 @@ setopt nonotify        # don't report the status of backgrounds jobs immediately
 setopt noshwordsplit   # use zsh style word splitting
 setopt pushdignoredups # don't push the same dir twice
 setopt pushdsilent     # don't print the directory stack after pushd or popd
+setopt rmstarsilent    # don't query before executing 'rm *' or 'rm path/*'
 setopt unset           # don't error out when unset parameters are used
 
 export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 
-export VSCODE_PORTABLE="$XDG_DATA_HOME/vscode"
+export VSCODE_PORTABLE="$XDG_DATA_HOME/vscode-oss"
 
 source "$ZDOTDIR/keybindings.sh"
 source "$ZDOTDIR/aliases.sh"
