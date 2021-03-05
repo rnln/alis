@@ -425,6 +425,7 @@ function update_configuration () {
 	fi
 	rm -rf "$tempdir/.config/paru/"
 	
+	mkdir -p "$XDG_CONFIG_HOME/kitty"
 	envsubst "$COLORS_LIST" <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
 	rm -rf "$tempdir/.config/kitty"
 
@@ -453,7 +454,7 @@ function update_configuration () {
 		}]'
 		local librewolf_appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$librewolf_gitlab_graphql"`
 		librewolf_appimage_url=`echo "$librewolf_appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
-		mkdir "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$librewolf_appimage_url"
+		mkdir -p "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$librewolf_appimage_url"
 		chmod +x "$XDG_DATA_HOME/librewolf/librewolf.AppImage"
 		sudo ln -s "$XDG_DATA_HOME/librewolf/librewolf.AppImage" /usr/bin/librewolf
 		librewolf --appimage-portable-home
