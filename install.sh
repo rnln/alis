@@ -389,7 +389,7 @@ function update_configuration () {
 	rm -rf "$tempdir/"{.git,install.sh,LICENSE,README.md}
 
 	# GNU Privacy Guard directory
-	export GNUPGHOME={GNUPGHOME:-"$XDG_CONFIG_HOME/gnupg"}
+	export GNUPGHOME=${GNUPGHOME:-"$XDG_CONFIG_HOME/gnupg"}
 	mkdir -p "$GNUPGHOME"
 	chmod 700 "$GNUPGHOME"
 	if [ -d "$HOME/.gnupg" ]; then
