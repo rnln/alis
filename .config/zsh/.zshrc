@@ -1,11 +1,30 @@
-PATH="$PATH:$HOME/.local/bin"
-export PATH
+# Z shell options
+# http://zsh.sourceforge.net/Doc/Release/Options.html
+setopt   AUTO_CD
+setopt   AUTO_PUSHD
+unsetopt BEEP
+setopt   COMPLETE_IN_WORD
+setopt   EXTENDED_GLOB
+unsetopt GLOB_DOTS
+setopt   HIST_FIND_NO_DUPS
+setopt   HIST_IGNORE_SPACE
+setopt   LONG_LIST_JOBS
+setopt   NOMATCH
+unsetopt NOTIFY
+setopt   PUSHD_IGNORE_DUPS
+setopt   PUSHD_SILENT
+setopt   RM_STAR_SILENT
+unsetopt SH_WORD_SPLIT
+setopt   UNSET
+unsetopt CASE_GLOB
 
 # XDG Base Directory specification
 # https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
 export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME/.cache"}
 export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+
+export PATH="$PATH:$HOME/.local/bin"
 
 export HISTFILE="$XDG_DATA_HOME/zsh/history"
 export HISTSIZE=100000
@@ -24,24 +43,6 @@ export LESS_TERMCAP_ue=$(tput sgr0)               # end underline
 
 export EDITOR=vim
 export VIMINIT='source "$XDG_CONFIG_HOME/vim/vimrc"'
-
-# http://zsh.sourceforge.net/Doc/Release/Options.html
-setopt autocd          # if a command is issued that can't be executed as a normal command, and the command is the name of a directory, perform the cd command to that directory
-setopt autopushd       # make cd push the old directory onto the directory stack
-setopt completeinword  # not just at the end
-setopt extendedglob    # treat the "#", "~" and "^" characters as part of patterns (an initial unquoted "~" always produces named directory expansion)
-setopt histfindnodups  # when searching for history entries in the line editor, don't display duplicates of a line previously found, even if the duplicates aren't contiguous
-setopt histignorespace # remove command lines from the history list when the first character on the line is a space
-setopt longlistjobs    # display PID when suspending processes as well
-setopt nobeep          # avoid "beep"ing
-setopt noglobdots      # "*" shouldn't match dotfiles
-setopt nomatch         # error out when no match
-setopt nonotify        # don't report the status of backgrounds jobs immediately
-setopt noshwordsplit   # use zsh style word splitting
-setopt pushdignoredups # don't push the same dir twice
-setopt pushdsilent     # don't print the directory stack after pushd or popd
-setopt rmstarsilent    # don't query before executing 'rm *' or 'rm path/*'
-setopt unset           # don't error out when unset parameters are used
 
 export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
 
