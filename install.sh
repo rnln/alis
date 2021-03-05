@@ -441,6 +441,7 @@ function update_configuration () {
 	rm -rf "$tempdir/.config/Code - OSS"
 
 	local librewolf_home="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
+	local librewolf_home_temp="$tempdir/.local/share/librewolf/librewolf.AppImage.home"
 	if [ -d "$HOME/.librewolf" ]; then
 		rsync -a "$HOME/.librewolf/" "$librewolf_home/.librewolf/"
 		rm -rf "$HOME/.librewolf"
@@ -463,17 +464,18 @@ function update_configuration () {
 		librewolf --headless </dev/null &>/dev/null &
 		local librewolf_pid=$!
 		while true; do
-			[ -f "$librewolf_home/.librewolf/installs.ini" ] && break
+			[ -f "$librewolf_home/.librewolf/profiles.ini" ] && break
 			sleep 0.1
 		done
 		kill $librewolf_pid
 		rm -rf "$librewolf_home/.librewolf/"*.default*
 	fi
-	export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home/.librewolf/installs.ini"`
-	local librewolf_home_temp="$tempdir/.local/share/librewolf/librewolf.AppImage.home"
 	rsync -a "$librewolf_home_temp/.librewolf/" "$librewolf_home/.librewolf/"
-	envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/installs.ini" >"$librewolf_home/.librewolf/installs.ini"
-	envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/profiles.ini" >"$librewolf_home/.librewolf/profiles.ini"
+	if [ -f "$librewolf_home/.librewolf/installs.ini" ]; then
+		export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home/.librewolf/installs.ini"`
+		envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/installs.ini" >"$librewolf_home/.librewolf/installs.ini"
+		envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/profiles.ini" >"$librewolf_home/.librewolf/profiles.ini"
+	fi
 	envsubst '$USER,$HOST' <"$librewolf_home_temp/.librewolf/default/user.js" >"$librewolf_home/.librewolf/default/user.js"
 	rm -rf "$tempdir/.local/share/librewolf"
 
