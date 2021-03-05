@@ -483,7 +483,7 @@ function update_configuration () {
 		log -i 2 -w "${ES_RESET}" -e '...' "$addon"
 		addon_page="$(curl -sL "$addons_root/addon/$addon")"
 		addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
-		if [ ! -f "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi" ]; do
+		if [ ! -f "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi" ]; then
 			xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
 			curl -fsSL "$xpi_url" -o "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi"
 		fi
