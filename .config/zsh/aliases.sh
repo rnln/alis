@@ -87,10 +87,34 @@ ssh_options='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
 alias ssh-insec="ssh $ssh_options"
 alias scp-insec="scp $ssh_options"
 
+# generate password
+function pwdgen () {
+	local length=${1:-9}
+	length=$(echo $length | sed 's/^0*//')
+	if [[ ! -n $length ]]; then
+		echo "$0: illegal length -- 0" >&2
+		return 1
+	fi
+	if [[ ! $length =~ ^[0-9]+$ ]]; then
+		echo "$0: illegal length -- $length" >&2
+		return 1
+	fi
+	local lowercase_length=1
+	(( length > 4 )) && lowercase_length=$(( length - 3 ))
+
+	local password=$(LC_CTYPE=C tr -dc a-z </dev/urandom | head -c $lowercase_length)
+	password=$password$(LC_CTYPE=C tr -dc "\-/." </dev/urandom | head -c 1)
+	password=$password$(LC_CTYPE=C tr -dc 0-9    </dev/urandom | head -c 1)
+	password=$password$(LC_CTYPE=C tr -dc A-Z    </dev/urandom | head -c 1)
+	password=$(echo $password | grep -o . | sort -R | tr -d "\n" | head -c $length)
+	echo $password
+}
+
+# extract archives
 function ex () {
     local return_code=0
     if [[ -z "$1" ]] ; then
-        echo 'Usage: ex <archive> ...' >&2
+        echo "Usage: $0 <archive> ..." >&2
         echo 'Extract archives in these formats: tar, bz2, gz, xz, zst, 7z, deb, jar, lha, lzh, lzma, rar, Z and zip.' >&2
         return_code=1
     else

@@ -475,7 +475,9 @@ function update_configuration () {
 		export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home/.librewolf/installs.ini"`
 		envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/installs.ini" >"$librewolf_home/.librewolf/installs.ini"
 		envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/profiles.ini" >"$librewolf_home/.librewolf/profiles.ini"
-	fi
+	# else
+	# 	rm -rf "$librewolf_home/.librewolf"/*.ini
+	# fi
 	envsubst '$USER,$HOST' <"$librewolf_home_temp/.librewolf/default/user.js" >"$librewolf_home/.librewolf/default/user.js"
 	rm -rf "$tempdir/.local/share/librewolf"
 
