@@ -1,42 +1,92 @@
 [user]
 	name = Roman Ilin
 	email = romanilin@pm.me
+	# https://blog.github.com/2016-03-28-git-2-8-has-been-released/#dont-guess-my-identity
+	useConfigOnly = true
+
+[credential]
+	helper = /usr/lib/git-core/git-credential-gnome-keyring
+
 [core]
 	editor = vim
 	pager = less
+	# https://help.github.com/articles/dealing-with-line-endings/
 	autocrlf = input
 	excludesFile = ~/.config/git/.gitignore
 	whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+	commitGraph = true # gc.writeCommitGraph
+
 [init]
 	defaultBranch = main
-[web]
-	browser = librewolf
-[rerere]
-	enabled = 1
-	autoupdate = 1
-[push]
-	default = matching
+
 [pull]
 	rebase = false
-[color]
-	ui = auto
-[color "branch"]
-	current = yellow bold
-	local = green bold
-	remote = cyan bold
-[color "diff"]
-	meta = yellow bold
-	frag = magenta bold
-	old = red bold
-	new = green bold
-	whitespace = red reverse
-[color "status"]
-	added = green bold
-	changed = yellow bold
-	untracked = red bold
+
+[push]
+	# recurse into submodules on-demand, all submodules that changed in the revisions to be pushed will be pushed
+	recurseSubmodules = on-demand
+
+[fetch]
+	# https://github.blog/2019-11-03-highlights-from-git-2-24/
+	writeCommitGraph = true
+	# unconditionally recurse into submodules
+	recurseSubmodules = true
+
+[status]
+	# git status should show a summary of commits for modified submodules.
+	submoduleSummary = true
+
+[branch]
+	# set up pull to rebase instead of merge when a new branch is created with git branch or git checkout that tracks another branch
+	autoSetupRebase = always
+	# set up tracking for new branches, not just for remote branches
+	autoSetupMerge = always
+
+[rebase]
+	missingCommitsCheck = error
+
+[stash]
+	showPatch = true
+
+[rerere]
+	# https://stackoverflow.com/questions/5519244/are-there-any-downsides-to-enabling-git-rerere
+	enabled = true
+	# update the index, not just the worktree
+	autoUpdate = true
+
+[pack]
+	# https://devblogs.microsoft.com/devops/exploring-new-frontiers-for-git-push-performance/
+	useSparse = true
+
+[gc]
+	# https://devblogs.microsoft.com/devops/supercharging-the-git-commit-graph/
+	writeCommitGraph = true
+
 [diff]
 	tool = vimdiff
+	# detect both renames and copies, theoretically slows down git
+	# renames = copies
+	# diffs of submodules should show the changed contents rather than a list of commits
+	submodule = diff
+	# diff should use a prefix pair that is different from the standard "a/" and "b/" depending on what is being compared, only relevant when not piping through diff-so-fancy
+	mnemonicPrefix = true
+	# use this regex to determinate word boundaries when running git diff --color-words
+	# https://medium.com/@porteneuve/30-git-cli-options-you-should-know-about-15423e8771df
+	wordRegex = .
+
 [difftool]
 	prompt = false
-[credential]
-	helper = /usr/lib/git-core/git-credential-gnome-keyring
+
+[mergetool]
+	# delete the .orig file after merge conflicts are resolved
+	keepBackup = false
+
+[log]
+	decorate = full
+
+[help]
+	# correct and execute mistyped commands after waiting for the given number of deciseconds
+	autoCorrect = 20
+
+[web]
+	browser = librewolf
