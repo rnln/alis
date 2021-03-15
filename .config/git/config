@@ -16,6 +16,8 @@
 	autoupdate = 1
 [push]
 	default = matching
+[pull]
+	rebase = false
 [color]
 	ui = auto
 [color "branch"]
