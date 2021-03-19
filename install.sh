@@ -81,6 +81,7 @@ ADDITIONAL_PACKAGES=(
 	'keepassxc'
 	'libgnome-keyring'
 	'fuse2'
+	'pkgfile'
 )
 
 # https://addons.mozilla.org/addon/${addon}/
@@ -146,24 +147,16 @@ function invalid_option () {
 	exit 1
 }
 
-
 for option in "$@"; do
 	shift
 	case "$option" in
-		'--help')
-			set -- "$@" '-h' ;;
-		'--update')
-			set -- "$@" '-u' ;;
-		'--lts')
-			set -- "$@" '-l' ;;
-		'--post')
-			set -- "$@" '-p' ;;
-		'--vbox')
-			set -- "$@" '-v' ;;
-		'--xorg')
-			set -- "$@" '-x' ;;
-		'--drive')
-			set -- "$@" '-d' ;;
+		'--help')   set -- "$@" '-h' ;;
+		'--update') set -- "$@" '-u' ;;
+		'--lts')    set -- "$@" '-l' ;;
+		'--post')   set -- "$@" '-p' ;;
+		'--vbox')   set -- "$@" '-v' ;;
+		'--xorg')   set -- "$@" '-x' ;;
+		'--drive')  set -- "$@" '-d' ;;
 		*)  [ "$option" == --* ] && invalid_option "$option"
 			set -- "$@" "$option"
 	esac
@@ -214,6 +207,34 @@ function setup_terminal_colors () {
 }
 
 
+function setup_color_scheme () {
+	export BLACK='#121212'
+	export RED='#ff714f'
+	export GREEN='#00d965'
+	export YELLOW='#e0e000'
+	export BLUE='#7e9df9'
+	export MAGENTA='#ff5de1'
+	export CYAN='#90cbdb'
+	export WHITE='#ffffff'
+
+	export BLACK_BRIGHT='#555555'
+	export RED_BRIGHT=$RED
+	export GREEN_BRIGHT=$GREEN
+	export YELLOW_BRIGHT=$YELLOW
+	export BLUE_BRIGHT=$BLUE
+	export MAGENTA_BRIGHT=$MAGENTA
+	export CYAN_BRIGHT=$CYAN
+	export WHITE_BRIGHT=$WHITE
+
+	export FOREGROUND=$WHITE
+	export BACKGROUND=$BLACK
+	export BACKGROUND_HIGHLIGHT='#1f4871' # #3298ff66 on #121212 background
+
+	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
+	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT'
+}
+
+
 function log () {
 	# log function
 	# -i <depth>  Add indent in message beggining
@@ -254,31 +275,31 @@ function log () {
 }
 
 
-function setup_color_scheme () {
-	export BLACK='#121212'
-	export RED='#ff714f'
-	export GREEN='#00d965'
-	export YELLOW='#e0e000'
-	export BLUE='#7e9df9'
-	export MAGENTA='#ff5de1'
-	export CYAN='#90cbdb'
-	export WHITE='#ffffff'
+function ask () {
+	# -i <depth>  Add indent in message beggining
+	indent=''
+	while getopts 'i:' option; do
+		case "$option" in
+			i) indent="-i $OPTARG"
+		esac
+	done
 
-	export BLACK_BRIGHT='#555555'
-	export RED_BRIGHT=$RED
-	export GREEN_BRIGHT=$GREEN
-	export YELLOW_BRIGHT=$YELLOW
-	export BLUE_BRIGHT=$BLUE
-	export MAGENTA_BRIGHT=$MAGENTA
-	export CYAN_BRIGHT=$CYAN
-	export WHITE_BRIGHT=$WHITE
-
-	export FOREGROUND=$WHITE
-	export BACKGROUND=$BLACK
-	export BACKGROUND_HIGHLIGHT='#1f4871' # #3298ff66 on #121212 background
-
-	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
-	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT'
+	result=1
+	while true; do
+		log $indent -n -e '? [Y/n] ' "$@"
+		read -e answer
+		case $answer in
+			[Nn]*)
+				break
+				;;
+			[Yy]*|'')
+				result=0
+				break
+				;;
+			*) log $indent 'Try again'
+		esac
+	done
+	return $result
 }
 
 
@@ -289,42 +310,16 @@ function check_system_errors () {
 	log -i 1 -e ':' 'journalctl -p 3 -xb'
 	PAGER= $SUDO journalctl -p 3 -xb
 
-	while true; do
-		log -i 1 -n -e '? [Y/n] ' 'Clear these logs'
-		read -e answer
-		case $answer in
-			[Nn]*) break ;;
-			[Yy]*|'')
-				$SUDO systemctl reset-failed
-				$SUDO journalctl --vacuum-time=1s
-				break
-				;;
-			*) log -i 1 'Try again'
-		esac
-	done
+	if ask -i 1 'Clear these logs'; then
+		$SUDO systemctl reset-failed
+		$SUDO journalctl --vacuum-time=1s
+	fi
 }
 
 
 function revert_sudoers () {
 	# revert original /etc/sudoers after preventing sudo timeout
 	[ -f '/etc/sudoers.bak' ] && sudo mv /etc/sudoers.bak /etc/sudoers
-}
-
-
-function ask_to_reboot () {
-	while true; do
-		log -n -e '? [Y/n] ' 'Reboot now'
-		read -e answer
-		case $answer in
-			[Nn]*) break ;;
-			[Yy]*|'')
-				revert_sudoers
-				$SUDO reboot
-				break
-				;;
-			*) log -i 1 'Try again'
-		esac
-	done
 }
 
 
@@ -341,24 +336,6 @@ function install_vbox_guest_utils () {
 	if [ "$MODE" == 'post' ]; then $SUDO systemctl start vboxservice; fi
 }
 
-function ask () {
-	result=1
-	while true; do
-		log -n -e '? [Y/n] ' "$@"
-		read -e answer
-		case $answer in
-			[Nn]*)
-				break
-				;;
-			[Yy]*|'')
-				result=0
-				break
-				;;
-			*) log -i 1 'Try again'
-		esac
-	done
-	return $result
-}
 
 function install_paru () {
 	install_packages base-devel git
@@ -555,14 +532,14 @@ function install_base () {
 		log -f 'partitioning'
 
 		log -s 'partitions formatting'
-		mkfs.fat -F 32 /dev/sda1
-		mkswap /dev/sda2
-		mkfs.ext4 /dev/sda3
+		mkfs.fat -F 32 "${DRIVE}1"
+		mkswap "${DRIVE}2"
+		mkfs.ext4 "${DRIVE}3"
 		log -f 'partitions formatting'
 
 		log -s 'file systems mounting'
-		mount /dev/sda3 /mnt
-		swapon /dev/sda2
+		mount "${DRIVE}3" /mnt
+		swapon "${DRIVE}2"
 		log -f 'file systems mounting'
 	else
 		cat <<-EOF | sfdisk $DRIVE
@@ -574,13 +551,13 @@ function install_base () {
 		log -f 'partitioning'
 
 		log -s 'partitions formatting'
-		mkswap /dev/sda1
-		mkfs.ext4 /dev/sda2
+		mkswap "${DRIVE}1"
+		mkfs.ext4 "${DRIVE}2"
 		log -f 'partitions formatting'
 
 		log -s 'file systems mounting'
-		mount /dev/sda2 /mnt
-		swapon /dev/sda1
+		mount "${DRIVE}2" /mnt
+		swapon "${DRIVE}1"
 		log -f 'file systems mounting'
 	fi
 
@@ -618,13 +595,10 @@ function install_base () {
 	log -f 'network configuring'
 
 	log -s 'users configuring'
-	# PASSWORD=$(/usr/bin/openssl passwd -crypt 'vagrant')
-	# /usr/bin/usermod --password ${PASSWORD} root
-	# /usr/bin/useradd --password ${PASSWORD} --comment 'Vagrant User' --create-home --gid users --groups vagrant,vboxsf vagrant
-
-	$CHROOT sh -c "(echo '$ROOT_PASSWORD'; echo '$ROOT_PASSWORD') | passwd >/dev/null"
-	$CHROOT useradd --create-home --comment $USER_FULLNAME --groups wheel,audio $USER_USERNAME
-	$CHROOT sh -c "(echo '$USER_PASSWORD'; echo '$USER_PASSWORD') | passwd $USER_USERNAME >/dev/null"
+	ROOT_PASSWORD=$(openssl passwd -crypt ${ROOT_PASSWORD})
+	$CHROOT usermod --password ${ROOT_PASSWORD} root
+	USER_PASSWORD=$(openssl passwd -crypt ${USER_PASSWORD})
+	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password ${USER_PASSWORD} --gid users --groups "$USER_USERNAME",wheel "$USER_USERNAME" # audio,vboxsf
 	$CHROOT pacman -S --noconfirm --needed sudo
 	sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
 	log -f 'users configuring'
@@ -636,10 +610,15 @@ function install_base () {
 	fi
 
 	log -s 'boot loader installation and configuring'
-	$CHROOT pacman -S --noconfirm --needed grub efibootmgr
-	mkdir /mnt/boot/efi
-	mount /dev/sda1 /mnt/boot/efi
-	$CHROOT grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+	$CHROOT pacman -S --noconfirm --needed grub
+	if [ -d /sys/firmware/efi/efivars ]; then
+		$CHROOT pacman -S --noconfirm --needed efibootmgr
+		mkdir /mnt/boot/efi
+		mount "${DRIVE}1" /mnt/boot/efi
+		$CHROOT grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+	else
+		$CHROOT grub-install --target=i386-pc $DRIVE
+	fi
 	$CHROOT grub-mkconfig -o /boot/grub/grub.cfg
 	log -f 'boot loader installation and configuring'
 
@@ -648,10 +627,6 @@ function install_base () {
 	log -f 'partitions unmounting'
 
 	log -f -w "${ES_CYAN}" 'Arch Linux base installation'
-
-	check_system_errors
-
-	ask_to_reboot
 }
 
 
@@ -743,6 +718,7 @@ function install_post () {
 
 	log -s 'additional packages installation'
 	install_packages "${ADDITIONAL_PACKAGES[@]}"
+	sudo systemctl enable --now pkgfile-update.timer
 	log -f 'additional packages installation'
 
 	if [ "$VBOX" == true ]; then
@@ -815,10 +791,6 @@ function install_post () {
 	log -f 'pacman clearing up'
 
 	log -f -w "${ES_CYAN}" 'Arch Linux post-installation'
-
-	check_system_errors
-
-	ask_to_reboot
 }
 
 
@@ -831,4 +803,11 @@ elif [ "$MODE" == 'post' ]; then
 	install_post
 else
 	install_base
+fi
+
+check_system_errors
+
+if ask 'Reboot now'; then
+	revert_sudoers
+	reboot
 fi

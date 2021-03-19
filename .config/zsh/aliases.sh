@@ -2,7 +2,7 @@ alias please='sudo $(fc -ln -1)'
 alias rmf='rm -rf'
 
 # grep
-grep_options='--color=auto --exclude-dir={.git,.idea,.vscode,.venv}'
+grep_options='--color=auto --exclude-dir={.bzr,.git,.hg,.idea,.svn,.tox,.venv,.vscode,CVS}'
 alias grep="grep $grep_options"
 alias egrep="egrep $grep_options"
 alias fgrep="fgrep $grep_options"
