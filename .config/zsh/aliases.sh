@@ -4,8 +4,8 @@ alias rmf='rm -rf'
 # grep
 grep_options='--color=auto --exclude-dir={.bzr,.git,.hg,.idea,.svn,.tox,.venv,.vscode,CVS}'
 alias grep="grep $grep_options"
-alias egrep="egrep $grep_options"
-alias fgrep="fgrep $grep_options"
+alias egrep="e$grep"
+alias fgrep="f$grep"
 
 # write a prompt before overwriting an existing file
 alias cp='cp -i'
@@ -94,8 +94,7 @@ function pwdgen () {
 	if [[ ! -n $length ]]; then
 		echo "$0: illegal length -- 0" >&2
 		return 1
-	fi
-	if [[ ! $length =~ ^[0-9]+$ ]]; then
+	elif [[ ! $length =~ ^[0-9]+$ ]]; then
 		echo "$0: illegal length -- $length" >&2
 		return 1
 	fi

@@ -49,9 +49,17 @@ set -o complete_in_word
 # set +o csh_null_glob
 # set +o csh_nullcmd
 # set -o debug_before_cmd
-# set +o dvorak
-# set +o emacs
-# set -o equals
+
+# set -o equals # Perform = filename expansion. http://zsh.sourceforge.net/Doc/Release/Expansion.html#Filename-Expansion
+# set +o sh_file_expansion # Perform filename expansion (e.g., ~ expansion) before parameter expansion, command substitution, arithmetic expansion and brace expansion. If this option is unset, it is performed after brace expansion, so things like ‘~$USERNAME’ and ‘~{pfalstad,rc}’ will work.
+
+# set -o glob # Perform filename generation (globbing). http://zsh.sourceforge.net/Doc/Release/Expansion.html#Filename-Generation
+# set +o glob_assign # If this option is set, filename generation (globbing) is performed on the right hand side of scalar parameter assignments of the form ‘name=pattern (e.g. ‘foo=*’). If the result has more than one word the parameter will become an array with those words as arguments. This option is provided for backwards compatibility only: globbing is always performed on the right hand side of array assignments of the form ‘name=(value)’ (e.g. ‘foo=(*)’) and this form is recommended for clarity; with this option set, it is not possible to predict whether the result will be an array or a scalar.
+# set +o glob_complete # When the current word has a glob pattern, do not insert all the words resulting from the expansion but generate matches as for completion and cycle through them like MENU_COMPLETE. The matches are generated as if a ‘*’ was added to the end of the word, or inserted at the cursor when COMPLETE_IN_WORD is set. This actually uses pattern matching, not globbing, so it works not only for files but for any completion, such as options, user names, etc. Note that when the pattern matcher is used, matching control (for example, case-insensitive or anchored matching) cannot be used. This limitation only applies when the current word contains a pattern; simply turning on the GLOB_COMPLETE option does not have this effect.
+# set +o glob_dots # Do not require a leading ‘.’ in a filename to be matched explicitly.
+# set +o glob_star_short # When this option is set and the default zsh-style globbing is in effect, the pattern ‘**/*’ can be abbreviated to ‘**’ and the pattern ‘***/*’ can be abbreviated to ***. Hence ‘**.c’ finds a file ending in .c in any subdirectory, and ‘***.c’ does the same while also following symbolic links. A / immediately after the ‘**’ or ‘***’ forces the pattern to be treated as the unabbreviated form. 
+# set +o glob_subst # Treat any characters resulting from parameter expansion as being eligible for filename expansion and filename generation, and any characters resulting from command substitution as being eligible for filename generation. Braces (and commas in between) do not become eligible for expansion.
+
 # set +o err_exit
 # set +o err_return
 # set -o eval_lineno
@@ -61,12 +69,6 @@ set -o extended_glob
 # set -o flow_control
 # set +o force_float
 # set -o function_argzero
-# set -o glob
-# set +o glob_assign
-# set +o glob_complete
-set +o glob_dots # =
-# set +o glob_star_short
-# set +o glob_subst
 # set -o global_export
 # set -o global_rcs
 # set -o hash_cmds
@@ -154,7 +156,6 @@ set -o pushd_silent
 # set +o rematch_pcre
 set -o rm_star_silent
 # set +o rm_star_wait
-# set +o sh_file_expansion
 # set +o sh_glob
 # set +o sh_nullcmd
 # set +o sh_option_letters
@@ -210,7 +211,7 @@ export CARGO_HOME="$XDG_DATA_HOME"/cargo
 path=("$CARGO_HOME"/bin $path[@])
 
 export GOPATH="$XDG_DATA_HOME"/go
-path=($GOPATH $path[@])
+path=("$GOPATH"/bin $path[@])
 
 export PYLINTHOME="$XDG_CACHE_HOME"/pylint
 

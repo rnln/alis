@@ -119,7 +119,7 @@ GNOME_EXTENSIONS=(
 	'1010/archlinux-updates-indicator'
 	'1031/topicons'
 	'1112/screenshot-tool'
-	'1236/noannoyance'
+	# '1236/noannoyance'
 	'1526/notification-centerselenium-h'
 	'3396/color-picker'
 )
