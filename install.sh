@@ -66,8 +66,8 @@ ADDITIONAL_PACKAGES=(
 	'man'
 	'neovim'
 	'xdg-user-dirs'
-	'google-chrome'
-	'visual-studio-code-bin'
+	'google-chrome' # chromium
+	'visual-studio-code-bin' # code
 	'kitty'
 	'inetutils'
 	'p7zip'
@@ -79,19 +79,11 @@ ADDITIONAL_PACKAGES=(
 	'xcursor-openzone'
 	'youtube-dl'
 	'keepassxc'
-	'libgnome-keyring'
 	'fuse2'
 	'pkgfile'
 	'wl-clipboard'
 	'xclip'
 )
-
-# paru -S --noconfirm --needed rust
-# cargo install git-credential-keepassxc
-# keepassxc
-# # ...
-# git-credential-keepassxc configure
-# git config --global credential.helper keepassxc
 
 # https://addons.mozilla.org/addon/${addon}/
 FIREFOX_ADDONS=(
@@ -135,8 +127,8 @@ GNOME_EXTENSIONS=(
 
 # Applications not to move to folder 'Other' in GNOME applications' list
 APPS_TO_SHOW=(
-	'google-chrome'
-	'visual-studio-code'
+	'google-chrome' # chromium
+	'visual-studio-code' # code-oss
 	'kitty'
 	'librewolf'
 	'org.gnome.Nautilus'
@@ -197,7 +189,7 @@ shift $((OPTIND-1))
 
 
 [ "$EUID" == 0 ] || SUDO=sudo
-[ "$MODE" == 'post' ] || CHROOT="arch-chroot /mnt"
+[ "$MODE" == 'post' ] || CHROOT='arch-chroot /mnt'
 
 
 function setup_terminal_colors () {
@@ -256,7 +248,7 @@ function log () {
 
 	local OPTIND=1
 	local DEPTH=0
-	local FORMAT="${ES_BOLD}"
+	local FORMAT="$ES_BOLD"
 	local PADDING=''
 	local NEWLINE='\n'
 	local END='.'
@@ -264,8 +256,8 @@ function log () {
 
 	while getopts 'i:e:fnsw:' option; do
 		case "$option" in
-			i) DEPTH=$OPTARG ;;
-			e) END="${OPTARG}" ;;
+			i) DEPTH="$OPTARG" ;;
+			e) END="$OPTARG" ;;
 			w) FORMAT="${FORMAT}${OPTARG}" ;;
 			f) STATUS='Finished ' ;;
 			s) STATUS='Started ' ;;
@@ -349,18 +341,19 @@ function install_vbox_guest_utils () {
 
 function install_paru () {
 	install_packages base-devel git
-	local tempdir="$(mktemp -d)"
+	local tempdir=`mktemp -d`
 	git clone https://aur.archlinux.org/paru-bin.git "$tempdir"
 	sh -c "cd '$tempdir' && makepkg -si --noconfirm --needed"
 	rm -rf "$tempdir"
 }
 
+
 function update_configuration () {
 	# XDG Base Directory specification
 	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
-	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME/.cache"}
-	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME"/.config}
+	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME"/.cache}
+	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
 
 	if command -v pacman &>/dev/null; then
 		$SUDO pacman -Sy
@@ -371,70 +364,70 @@ function update_configuration () {
 	elif command -v yum &>/dev/null; then
 		yum install rsync
 	fi
-	local tempdir="$(mktemp -d)"
+	local tempdir=`mktemp -d`
 	git clone https://gitlab.com/romanilin/alis.git "$tempdir"
-	rm -rf "$tempdir/"{.git,install.sh,LICENSE,README.md}
+	rm -rf "$tempdir"/{.git,install.sh,LICENSE,README.md}
 
 	# GNU Privacy Guard directory
-	export GNUPGHOME=${GNUPGHOME:-"$XDG_CONFIG_HOME/gnupg"}
+	export GNUPGHOME=${GNUPGHOME:-"$XDG_CONFIG_HOME"/gnupg}
 	mkdir -p "$GNUPGHOME"
 	chmod 700 "$GNUPGHOME"
-	if [ -d "$HOME/.gnupg" ]; then
-		rsync -a "$HOME/.gnupg/" "$GNUPGHOME/"
-		rm -rf "$HOME/.gnupg"
+	if [ -d "$HOME"/.gnupg ]; then
+		rsync -a "$HOME"/.gnupg/ "$GNUPGHOME"/
+		rm -rf "$HOME"/.gnupg
 	fi
-	rsync -a "$tempdir/.config/gnupg/" "$GNUPGHOME/"
-	rm -rf "$tempdir/.config/gnupg"
+	rsync -a "$tempdir"/.config/gnupg/ "$GNUPGHOME"/
+	rm -rf "$tempdir"/.config/gnupg
 
 	# Secure Shell directory
-	mkdir -p "$XDG_CONFIG_HOME/ssh"
-	if [ -d "$HOME/.ssh" ]; then
-		rsync -a "$HOME/.ssh/" "$XDG_CONFIG_HOME/ssh/"
-		rm -rf "$HOME/.ssh"
+	mkdir -p "$XDG_CONFIG_HOME"/ssh
+	if [ -d "$HOME"/.ssh ]; then
+		rsync -a "$HOME"/.ssh/ "$XDG_CONFIG_HOME"/ssh/
+		rm -rf "$HOME"/.ssh
 	fi
-	rsync -a "$tempdir/.config/ssh/" "$XDG_CONFIG_HOME/ssh/"
-	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] && ssh-keygen -q -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     && ssh-keygen -q -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
-	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
-	eval "$(ssh-agent -s)"
-	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
+	rsync -a "$tempdir"/.config/ssh/ "$XDG_CONFIG_HOME"/ssh/
+	envsubst '$XDG_CONFIG_HOME' <"$tempdir"/.config/ssh/config >"$XDG_CONFIG_HOME"/ssh/config
+	[ ! -f "$XDG_CONFIG_HOME"/ssh/id_ed25519 ] && ssh-keygen -q -P '' -t ed25519        -f "$XDG_CONFIG_HOME"/ssh/id_ed25519
+	[ ! -f "$XDG_CONFIG_HOME"/ssh/id_rsa ]     && ssh-keygen -q -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME"/ssh/id_rsa
+	chmod 600 "$XDG_CONFIG_HOME"/ssh/id_*
+	eval `ssh-agent -s`
+	for file in "$XDG_CONFIG_HOME"/ssh/id_{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
 		[ -f $file ] && ssh-add $file
 	done
-	rm -rf "$tempdir/.config/ssh"
+	rm -rf "$tempdir"/.config/ssh
 
 	# pacman and paru configuration
 	if [ -f /etc/pacman.conf ]; then
 		pacman -Q paru &>/dev/null || install_paru
-		sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
-		rsync -a "$tempdir/.config/paru/" "$XDG_CONFIG_HOME/paru/"
+		sudo mv "$tempdir"/.config/paru/pacman.conf /etc/pacman.conf
+		rsync -a "$tempdir"/.config/paru/ "$XDG_CONFIG_HOME"/paru/
 		sudo pacman -Sy
 	fi
-	rm -rf "$tempdir/.config/paru/"
+	rm -rf "$tempdir"/.config/paru
 	
-	mkdir -p "$XDG_CONFIG_HOME/kitty"
-	envsubst "$COLORS_LIST" <"$tempdir/.config/kitty/kitty.conf" >"$XDG_CONFIG_HOME/kitty/kitty.conf"
-	rm -rf "$tempdir/.config/kitty"
+	mkdir -p "$XDG_CONFIG_HOME"/kitty
+	envsubst "$COLORS_LIST" <"$tempdir"/.config/kitty/kitty.conf >"$XDG_CONFIG_HOME"/kitty/kitty.conf
+	rm -rf "$tempdir"/.config/kitty
 
-	if [ -d "$HOME/.vscode-oss" ]; then
-		rsync -a "$HOME/.vscode-oss/" "$XDG_DATA_HOME/vscode-oss/"
-		rm -rf "$HOME/.vscode-oss"
+	if [ -d "$HOME"/.vscode-oss ]; then
+		rsync -a "$HOME"/.vscode-oss/ "$XDG_DATA_HOME"/vscode-oss/
+		rm -rf "$HOME"/.vscode-oss
 	fi
 	if [ ! -f /usr/lib/electron/bin/code-oss ]; then
 		sudo mkdir -p /usr/lib/electron/bin
 		sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	fi
-	rsync -a "$tempdir/.config/Code/" "$XDG_CONFIG_HOME/Code/"
-	rm -rf "$tempdir/.config/Code"
+	rsync -a "$tempdir"/.config/Code/ "$XDG_CONFIG_HOME"/Code/
+	rm -rf "$tempdir"/.config/Code
 
-	# local librewolf_home="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
-	# local librewolf_home_temp="$tempdir/.local/share/librewolf/librewolf.AppImage.home"
-	# if [ -d "$HOME/.librewolf" ]; then
-	# 	rsync -a "$HOME/.librewolf/" "$librewolf_home/.librewolf/"
-	# 	rm -rf "$HOME/.librewolf"
+	# local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
+	# local librewolf_home_temp="$tempdir"/.local/share/librewolf/librewolf.AppImage.home
+	# if [ -d "$HOME"/.librewolf ]; then
+	# 	rsync -a "$HOME"/.librewolf/ "$librewolf_home"/.librewolf/
+	# 	rm -rf "$HOME"/.librewolf
 	# 	paru -Rcns librewolf
 	# fi
-	# if [ ! -f "$XDG_DATA_HOME/librewolf/librewolf.AppImage" ]; then
+	# if [ ! -f "$XDG_DATA_HOME"/librewolf/librewolf.AppImage ]; then
 	# 	local librewolf_gitlab_graphql='[{
 	# 		"operationName":"allReleases",
 	# 		"variables":{"fullPath":"librewolf-community/browser/linux","first":1},
@@ -442,53 +435,66 @@ function update_configuration () {
 	# 	}]'
 	# 	local librewolf_appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$librewolf_gitlab_graphql"`
 	# 	librewolf_appimage_url=`echo "$librewolf_appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
-	# 	mkdir -p "$XDG_DATA_HOME/librewolf" && curl -o "$XDG_DATA_HOME/librewolf/librewolf.AppImage" "$librewolf_appimage_url"
-	# 	chmod +x "$XDG_DATA_HOME/librewolf/librewolf.AppImage"
-	# 	sudo ln -s "$XDG_DATA_HOME/librewolf/librewolf.AppImage" /usr/bin/librewolf
+	# 	mkdir -p "$XDG_DATA_HOME"/librewolf && curl -o "$XDG_DATA_HOME"/librewolf/librewolf.AppImage "$librewolf_appimage_url"
+	# 	chmod +x "$XDG_DATA_HOME"/librewolf/librewolf.AppImage
+	# 	sudo ln -s "$XDG_DATA_HOME"/librewolf/librewolf.AppImage /usr/bin/librewolf
 	# 	librewolf --appimage-portable-home
 	# fi
-	# if [ ! -f "$librewolf_home/.librewolf/installs.ini" ]; then
+	# if [ ! -f "$librewolf_home"/.librewolf/installs.ini ]; then
 	# 	librewolf --headless </dev/null &>/dev/null &
 	# 	local librewolf_pid=$!
 	# 	while true; do
-	# 		[ -f "$librewolf_home/.librewolf/profiles.ini" ] && break
+	# 		[ -f "$librewolf_home"/.librewolf/profiles.ini ] && break
 	# 		sleep 0.1
 	# 	done
 	# 	kill $librewolf_pid
-	# 	rm -rf "$librewolf_home/.librewolf/"*.default*
+	# 	rm -rf "$librewolf_home"/.librewolf/*.default*
 	# fi
-	# rsync -a "$librewolf_home_temp/.librewolf/" "$librewolf_home/.librewolf/"
-	# if [ -f "$librewolf_home/.librewolf/installs.ini" ]; then
-	# 	export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home/.librewolf/installs.ini"`
-	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/installs.ini" >"$librewolf_home/.librewolf/installs.ini"
-	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp/.librewolf/profiles.ini" >"$librewolf_home/.librewolf/profiles.ini"
+	# rsync -a "$librewolf_home_temp"/.librewolf/ "$librewolf_home"/.librewolf/
+	# if [ -f "$librewolf_home"/.librewolf/installs.ini ]; then
+	# 	export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home"/.librewolf/installs.ini`
+	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/installs.ini >"$librewolf_home"/.librewolf/installs.ini
+	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/profiles.ini >"$librewolf_home"/.librewolf/profiles.ini
 	# else
-	# 	rm -rf "$librewolf_home/.librewolf"/*.ini
+	# 	rm -rf "$librewolf_home"/.librewolf/*.ini
 	# fi
-	# envsubst '$USER,$HOST' <"$librewolf_home_temp/.librewolf/default/user.js" >"$librewolf_home/.librewolf/default/user.js"
-	rm -rf "$tempdir/.local/share/librewolf"
+	# envsubst '$USER,$HOST' <"$librewolf_home_temp"/.librewolf/default/user.js >"$librewolf_home"/.librewolf/default/user.js
+	rm -rf "$tempdir"/.local/share/librewolf
 
-	# mkdir -p "$librewolf_home/.librewolf/default/extensions"
-	# addons_root="https://addons.mozilla.org/firefox"
+	# mkdir -p "$librewolf_home"/.librewolf/default/extensions
+	# addons_root='https://addons.mozilla.org/firefox'
 	# log -s -i 1 'Firefox add-ons installation'
 	# for addon in "${FIREFOX_ADDONS[@]}"; do
-	# 	log -i 2 -w "${ES_RESET}" -e '...' "$addon"
-	# 	addon_page="$(curl -sL "$addons_root/addon/$addon")"
-	# 	addon_guid="$(echo $addon_page | grep -oP 'byGUID":{"\K.+?(?=":)')"
-	# 	if [ ! -f "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi" ]; then
-	# 		xpi_url="$addons_root/downloads/file/$(echo $addon_page | grep -oP 'file/\K.+\.xpi(?=">Download file)')"
-	# 		curl -fsSL "$xpi_url" -o "$librewolf_home/.librewolf/default/extensions/$addon_guid.xpi"
+	# 	log -i 2 -w "$ES_RESET" -e '...' "$addon"
+	# 	addon_page=`curl -sL "$addons_root/addon/$addon"`
+	# 	addon_guid=`echo "$addon_page" | grep -oP 'byGUID":{"\K.+?(?=":)'`
+	# 	if [ ! -f "$librewolf_home"/.librewolf/default/extensions/"$addon_guid".xpi ]; then
+	# 		xpi_url="$addons_root"/downloads/file/`echo "$addon_page" | grep -oP 'file/\K.+\.xpi(?=">Download file)'`
+	# 		curl -fsSL "$xpi_url" -o "$librewolf_home"/.librewolf/default/extensions/"$addon_guid".xpi
 	# 	fi
 	# done
 	# log -f -i 1 'Firefox add-ons installation'
 
-	rsync -a "$tempdir/" "$HOME/"
+	if ask 'Update KeePassXC database'; then
+		rm "$XDG_DATA_HOME"/keepassxc/database.kdbx
+		cp "$tempdir"/.local/share/keepassxc/database.kdbx "$XDG_DATA_HOME"/keepassxc/database.kdbx
+	fi
+	rm -rf "$tempdir"/.local/share/keepassxc
+
+	rsync -a "$tempdir"/ "$HOME"/
 	rm -rf "$tempdir"
+
+	# paru -S --noconfirm --needed rust
+	# cargo install git-credential-keepassxc
+	# keepassxc
+	# # ...
+	# git-credential-keepassxc configure
+	# git config --global credential.helper keepassxc
 }
 
 
 function install_base () {
-	log -s -w "${ES_CYAN}" 'Arch Linux base installation'
+	log -s -w "$ES_CYAN" 'Arch Linux base installation'
 
 	log -s 'getting user data'
 	log -n -i 1 -e ': ' '(1/7) Hostname [host]'
@@ -502,7 +508,7 @@ function install_base () {
 		read -s ROOT_PASSWORD_CHECK
 		echo
 		if [ "$ROOT_PASSWORD" == "$ROOT_PASSWORD_CHECK" ]; then break; fi
-		log -i 1 -w "${ES_RED}" 'Passwords do not match, try again'
+		log -i 1 -w "$ES_RED" 'Passwords do not match, try again'
 	done
 	ROOT_PASSWORD=${ROOT_PASSWORD:-root}
 	log -n -i 1 -e ': ' '(4/7) User full name [User]'
@@ -519,7 +525,7 @@ function install_base () {
 		read -s USER_PASSWORD_CHECK
 		echo
 		if [ "$USER_PASSWORD" == "$USER_PASSWORD_CHECK" ]; then break; fi
-		log -i 1 -w "${ES_RED}" 'Passwords do not match, try again'
+		log -i 1 -w "$ES_RED" 'Passwords do not match, try again'
 	done
 	USER_PASSWORD=${USER_PASSWORD:-user}
 	log -f 'getting user data'
@@ -542,14 +548,14 @@ function install_base () {
 		log -f 'partitioning'
 
 		log -s 'partitions formatting'
-		mkfs.fat -F 32 "${DRIVE}1"
-		mkswap "${DRIVE}2"
-		mkfs.ext4 "${DRIVE}3"
+		mkfs.fat -F 32 "$DRIVE"1
+		mkswap "$DRIVE"2
+		mkfs.ext4 "$DRIVE"3
 		log -f 'partitions formatting'
 
 		log -s 'file systems mounting'
-		mount "${DRIVE}3" /mnt
-		swapon "${DRIVE}2"
+		mount "$DRIVE"3 /mnt
+		swapon "$DRIVE"2
 		log -f 'file systems mounting'
 	else
 		cat <<-EOF | sfdisk $DRIVE
@@ -561,13 +567,13 @@ function install_base () {
 		log -f 'partitioning'
 
 		log -s 'partitions formatting'
-		mkswap "${DRIVE}1"
-		mkfs.ext4 "${DRIVE}2"
+		mkswap "$DRIVE"1
+		mkfs.ext4 "$DRIVE"2
 		log -f 'partitions formatting'
 
 		log -s 'file systems mounting'
-		mount "${DRIVE}2" /mnt
-		swapon "${DRIVE}1"
+		mount "$DRIVE"2 /mnt
+		swapon "$DRIVE"1
 		log -f 'file systems mounting'
 	fi
 
@@ -608,7 +614,7 @@ function install_base () {
 	ROOT_PASSWORD=$(openssl passwd -crypt ${ROOT_PASSWORD})
 	$CHROOT usermod --password ${ROOT_PASSWORD} root
 	USER_PASSWORD=$(openssl passwd -crypt ${USER_PASSWORD})
-	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password ${USER_PASSWORD} --gid users --groups "$USER_USERNAME",wheel "$USER_USERNAME" # audio,vboxsf
+	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password "$USER_PASSWORD" --gid users --groups "$USER_USERNAME",wheel "$USER_USERNAME" # groups += audio,vboxsf
 	$CHROOT pacman -S --noconfirm --needed sudo
 	sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
 	log -f 'users configuring'
@@ -624,10 +630,10 @@ function install_base () {
 	if [ -d /sys/firmware/efi/efivars ]; then
 		$CHROOT pacman -S --noconfirm --needed efibootmgr
 		mkdir /mnt/boot/efi
-		mount "${DRIVE}1" /mnt/boot/efi
+		mount "$DRIVE"1 /mnt/boot/efi
 		$CHROOT grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 	else
-		$CHROOT grub-install --target=i386-pc $DRIVE
+		$CHROOT grub-install --target=i386-pc "$DRIVE"
 	fi
 	$CHROOT grub-mkconfig -o /boot/grub/grub.cfg
 	log -f 'boot loader installation and configuring'
@@ -636,26 +642,26 @@ function install_base () {
 	umount -R /mnt
 	log -f 'partitions unmounting'
 
-	log -f -w "${ES_CYAN}" 'Arch Linux base installation'
+	log -f -w "$ES_CYAN" 'Arch Linux base installation'
 }
 
 
 function install_post () {
-	log -s -w "${ES_CYAN}" 'Arch Linux post-installation'
+	log -s -w "$ES_CYAN" 'Arch Linux post-installation'
 
 	# XDG Base Directory specification
 	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME/.config"}
-	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME/.cache"}
-	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME/.local/share"}
+	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME"/.config}
+	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME"/.cache}
+	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
 
-	export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
+	export GNUPGHOME="$XDG_CONFIG_HOME"/gnupg
 	mkdir -p "$GNUPGHOME"
 	chmod 700 "$GNUPGHOME"
 
 	log -s 'sudo timeout preventing'
 	command -v sudo >/dev/null 2>&1 || {
-		log -w "${ES_RED}" "sudo isn't installed"
+		log -w "$ES_RED" "sudo isn't installed"
 		exit 1
 	}
 	trap revert_sudoers EXIT SIGHUP SIGINT SIGTERM
@@ -700,13 +706,10 @@ function install_post () {
 
 	log -s 'zsh installation'
 	install_packages zsh starship-bin
-	sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME/.config\"' >/etc/zsh/zshenv"
-	sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME/zsh\"' >>/etc/zsh/zshenv"
-	sudo chsh -s "$(which zsh)" "$(whoami)"
-	export HISTFILE="$(mktemp)"
-	export HISTSIZE=0
-	history -c
-	rm "$HOME/.bash"*
+	sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME\"/.config' >/etc/zsh/zshenv"
+	sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME\"/zsh' >>/etc/zsh/zshenv"
+	sudo chsh -s `which zsh` `whoami`
+	rm "$HOME"/.bash*
 	log -f 'zsh installation'
 
 	log -s 'OpenSSH installation'
@@ -744,17 +747,17 @@ function install_post () {
 	log -s 'GDM configuring'
 	tempdir=$(mktemp -d)
 	cd "$tempdir"
-	echo '<?xml version="1.0" encoding="UTF-8"?>' >"$tempdir/gnome-shell-theme.gresource.xml"
-	echo '<gresources><gresource>' >>"$tempdir/gnome-shell-theme.gresource.xml"
+	echo '<?xml version="1.0" encoding="UTF-8"?>' >"$tempdir"/gnome-shell-theme.gresource.xml
+	echo '<gresources><gresource>' >>"$tempdir"/gnome-shell-theme.gresource.xml
 	for file in $(gresource list /usr/share/gnome-shell/gnome-shell-theme.gresource); do
-		mkdir -p "$(dirname "$tempdir$file")"
-		gresource extract /usr/share/gnome-shell/gnome-shell-theme.gresource "$file" >"$tempdir$file"
-		echo "<file>${file#\/}</file>" >>"$tempdir/gnome-shell-theme.gresource.xml"
+		mkdir -p `dirname "${tempdir}${file}"`
+		gresource extract /usr/share/gnome-shell/gnome-shell-theme.gresource "$file" >"${tempdir}${file}"
+		echo "<file>${file#\/}</file>" >>"$tempdir"/gnome-shell-theme.gresource.xml
 	done
-	echo '</gresource></gresources>' >>"$tempdir/gnome-shell-theme.gresource.xml"
-	sed -i -zE 's/(#lockDialogGroup \{)[^}]+/\1 background-color: #000000; /g' "$tempdir/org/gnome/shell/theme/gnome-shell.css"
-	glib-compile-resources "$tempdir/gnome-shell-theme.gresource.xml"
-	sudo cp -f "$tempdir/gnome-shell-theme.gresource" /usr/share/gnome-shell/
+	echo '</gresource></gresources>' >>"$tempdir"/gnome-shell-theme.gresource.xml
+	sed -i -zE 's/(#lockDialogGroup \{)[^}]+/\1 background-color: #000000; /g' "$tempdir"/org/gnome/shell/theme/gnome-shell.css
+	glib-compile-resources "$tempdir"/gnome-shell-theme.gresource.xml
+	sudo cp -f "$tempdir"/gnome-shell-theme.gresource /usr/share/gnome-shell/
 	cd - >/dev/null
 	rm -rf "$tempdir"
 	log -f 'GDM configuring'
@@ -769,23 +772,23 @@ function install_post () {
 
 	tempdir=$(mktemp -d)
 	extensions_root='https://extensions.gnome.org'
-	gnome_shell_version="$(gnome-shell --version | awk '{print $NF}')"
+	gnome_shell_version=`gnome-shell --version | awk '{print $NF}'`
 	for extension in "${GNOME_EXTENSIONS[@]}"; do
-		data_uuid="$(curl $extensions_root/extension/$extension/ -so - | awk -F\" '/data-uuid/ {print $2}')"
+		data_uuid=`curl $extensions_root/extension/$extension/ -so - | awk -F\" '/data-uuid/ {print $2}'`
 		extension_url="$extensions_root/download-extension/$data_uuid.shell-extension.zip?shell_version=$gnome_shell_version"
-		extension_url="$(curl -sI $extension_url | awk '/Location:/ {print $2}' | tr -d '\r')"
-		sh -c "cd '$tempdir' && curl -fsSLO '$extensions_root$extension_url'"
-		gnome-extensions install -f $tempdir/*.zip
-		gnome-extensions enable $data_uuid
-		rm $tempdir/*
+		extension_url=`curl -sI $extension_url | awk '/Location:/ {print $2}' | tr -d '\r'`
+		sh -c "cd '$tempdir' && curl -fsSLO '${extensions_root}${extension_url}'"
+		gnome-extensions install -f "$tempdir"/*.zip
+		gnome-extensions enable "$data_uuid"
+		rm "$tempdir"/*
 	done
 	rm -rf "$tempdir"
-	find "$HOME/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet" \( -type d -name .git -prune \) -o -type f -print0 \
+	find "$HOME"/.local/share/gnome-shell/extensions/arch-update@RaphaelRochet \( -type d -name .git -prune \) -o -type f -print0 \
 		| xargs -0 sed -i 's/\(Up to date\) :)/\1/g'
 
-	export terminal_profile="$(uuidgen)"
-	envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$apps_to_hide,$terminal_profile' <"$HOME/.config/dconf/dump.ini" | dconf load /
-	rm "$HOME/.config/dconf/dump.ini"
+	export terminal_profile=`uuidgen`
+	envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$apps_to_hide,$terminal_profile' <"$HOME"/.config/dconf/dump.ini | dconf load /
+	rm "$HOME"/.config/dconf/dump.ini
 	log -f 'GNOME configuring'
 
 	if [ "$VBOX" == true ]; then
@@ -795,12 +798,12 @@ function install_post () {
 	fi
 
 	log -s 'pacman clearing up'
-	orphans="$(pacman -Qtdq | tee)"
+	orphans=`pacman -Qtdq | tee`
 	[[ -n "$orphans" ]] && sudo pacman -Rcns --noconfirm "$orphans"
 	sudo pacman -Scc --noconfirm
 	log -f 'pacman clearing up'
 
-	log -f -w "${ES_CYAN}" 'Arch Linux post-installation'
+	log -f -w "$ES_CYAN" 'Arch Linux post-installation'
 }
 
 
