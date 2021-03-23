@@ -197,7 +197,7 @@ shift $((OPTIND-1))
 
 
 [ "$EUID" == 0 ] || SUDO=sudo
-[ "$MODE" == 'post' ] || CHROOT=arch-chroot /mnt
+[ "$MODE" == 'post' ] || CHROOT="arch-chroot /mnt"
 
 
 function setup_terminal_colors () {
