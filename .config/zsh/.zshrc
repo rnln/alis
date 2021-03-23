@@ -121,7 +121,7 @@ set -o long_list_jobs
 # set -o multi_func_def
 # set -o multibyte
 # set -o multios
-set -o nomatch # =
+# set -o nomatch # =
 set +o notify
 # set +o null_glob
 # set +o numeric_glob_sort
@@ -159,7 +159,7 @@ set -o rm_star_silent
 # set +o sh_glob
 # set +o sh_nullcmd
 # set +o sh_option_letters
-set +o sh_word_split # =
+# set +o sh_word_split # =
 # set +o share_history
 # set -o short_loops
 # set +o single_line_zle
@@ -168,7 +168,7 @@ set +o sh_word_split # =
 # set +o transient_rprompt
 # set +o traps_async
 # set +o typeset_silent
-set -o unset # =
+# set -o unset # =
 # set +o verbose
 # set +o warn_create_global
 # set +o warn_nested_var
@@ -241,8 +241,8 @@ zle_highlight=(
     suffix:bold
 )
 
-rustup completions zsh >"$XDG_CACHE_HOME"/zsh/rustup
-fpath+="$XDG_CACHE_HOME"/zsh
+# rustup completions zsh >"$XDG_CACHE_HOME"/zsh/rustup
+# fpath+="$XDG_CACHE_HOME"/zsh
 
 zmodload zsh/complist
 autoload -Uz compinit

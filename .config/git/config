@@ -4,9 +4,6 @@
 	# https://blog.github.com/2016-03-28-git-2-8-has-been-released/#dont-guess-my-identity
 	useConfigOnly = true
 
-[credential]
-	helper = /usr/lib/git-core/git-credential-gnome-keyring
-
 [core]
 	editor = vim
 	pager = less

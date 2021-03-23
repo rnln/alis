@@ -66,8 +66,8 @@ ADDITIONAL_PACKAGES=(
 	'man'
 	'neovim'
 	'xdg-user-dirs'
-	'chromium'
-	'code'
+	'google-chrome'
+	'visual-studio-code-bin'
 	'kitty'
 	'inetutils'
 	'p7zip'
@@ -82,9 +82,16 @@ ADDITIONAL_PACKAGES=(
 	'libgnome-keyring'
 	'fuse2'
 	'pkgfile'
-	# 'wl-clipboard'
-	# 'xclip'
+	'wl-clipboard'
+	'xclip'
 )
+
+paru -S --noconfirm --needed rust
+cargo install git-credential-keepassxc
+keepassxc
+# ...
+git-credential-keepassxc configure
+git config --global credential.helper keepassxc
 
 # https://addons.mozilla.org/addon/${addon}/
 FIREFOX_ADDONS=(
@@ -128,8 +135,8 @@ GNOME_EXTENSIONS=(
 
 # Applications not to move to folder 'Other' in GNOME applications' list
 APPS_TO_SHOW=(
-	'chromium'
-	'code-oss'
+	'google-chrome'
+	'visual-studio-code'
 	'kitty'
 	'librewolf'
 	'org.gnome.Nautilus'
@@ -137,6 +144,7 @@ APPS_TO_SHOW=(
 	'telegramdesktop'
 	'transmission-gtk'
 	'virtualbox'
+	'org.keepassxc.KeePassXC'
 )
 APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 
@@ -400,7 +408,7 @@ function update_configuration () {
 		pacman -Q paru &>/dev/null || install_paru
 		sudo mv "$tempdir/.config/paru/pacman.conf" /etc/pacman.conf
 		rsync -a "$tempdir/.config/paru/" "$XDG_CONFIG_HOME/paru/"
-		paru -Sy
+		sudo pacman -Sy
 	fi
 	rm -rf "$tempdir/.config/paru/"
 	
