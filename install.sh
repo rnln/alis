@@ -416,8 +416,8 @@ function update_configuration () {
 		sudo mkdir -p /usr/lib/electron/bin
 		sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	fi
-	rsync -a "$tempdir/.config/Code - OSS/" "$XDG_CONFIG_HOME/Code - OSS/"
-	rm -rf "$tempdir/.config/Code - OSS"
+	rsync -a "$tempdir/.config/Code/" "$XDG_CONFIG_HOME/Code/"
+	rm -rf "$tempdir/.config/Code"
 
 	# local librewolf_home="$XDG_DATA_HOME/librewolf/librewolf.AppImage.home"
 	# local librewolf_home_temp="$tempdir/.local/share/librewolf/librewolf.AppImage.home"
