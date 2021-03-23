@@ -86,12 +86,12 @@ ADDITIONAL_PACKAGES=(
 	'xclip'
 )
 
-paru -S --noconfirm --needed rust
-cargo install git-credential-keepassxc
-keepassxc
-# ...
-git-credential-keepassxc configure
-git config --global credential.helper keepassxc
+# paru -S --noconfirm --needed rust
+# cargo install git-credential-keepassxc
+# keepassxc
+# # ...
+# git-credential-keepassxc configure
+# git config --global credential.helper keepassxc
 
 # https://addons.mozilla.org/addon/${addon}/
 FIREFOX_ADDONS=(
