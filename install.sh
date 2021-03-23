@@ -386,8 +386,8 @@ function update_configuration () {
 	fi
 	rsync -a "$tempdir/.config/ssh/" "$XDG_CONFIG_HOME/ssh/"
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir/.config/ssh/config" >"$XDG_CONFIG_HOME/ssh/config"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] && ssh-keygen -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
-	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     && ssh-keygen -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_ed25519" ] && ssh-keygen -q -P '' -t ed25519        -f "$XDG_CONFIG_HOME/ssh/id_ed25519"
+	[ ! -f "$XDG_CONFIG_HOME/ssh/id_rsa" ]     && ssh-keygen -q -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME/ssh/id_rsa"
 	chmod 600 "$XDG_CONFIG_HOME/ssh/id_"*
 	eval "$(ssh-agent -s)"
 	for file in "$XDG_CONFIG_HOME/ssh/id_"{rsa,dsa,ecdsa,ecdsa_sk,ed25519}; do
