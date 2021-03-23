@@ -409,14 +409,14 @@ function update_configuration () {
 	envsubst "$COLORS_LIST" <"$tempdir"/.config/kitty/kitty.conf >"$XDG_CONFIG_HOME"/kitty/kitty.conf
 	rm -rf "$tempdir"/.config/kitty
 
-	if [ -d "$HOME"/.vscode-oss ]; then
-		rsync -a "$HOME"/.vscode-oss/ "$XDG_DATA_HOME"/vscode-oss/
-		rm -rf "$HOME"/.vscode-oss
+	if [ -d "$HOME"/.vscode ]; then
+		rsync -a "$HOME"/.vscode/ "$XDG_DATA_HOME"/vscode/
+		rm -rf "$HOME"/.vscode
 	fi
-	if [ ! -f /usr/lib/electron/bin/code-oss ]; then
-		sudo mkdir -p /usr/lib/electron/bin
-		sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
-	fi
+	# if [ ! -f /usr/lib/electron/bin/code-oss ]; then
+	# 	sudo mkdir -p /usr/lib/electron/bin
+	# 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
+	# fi
 	rsync -a "$tempdir"/.config/Code/ "$XDG_CONFIG_HOME"/Code/
 	rm -rf "$tempdir"/.config/Code
 
