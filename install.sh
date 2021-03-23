@@ -82,8 +82,8 @@ ADDITIONAL_PACKAGES=(
 	'libgnome-keyring'
 	'fuse2'
 	'pkgfile'
-	'wl-clipboard'
-	'xclip'
+	# 'wl-clipboard'
+	# 'xclip'
 )
 
 # https://addons.mozilla.org/addon/${addon}/
