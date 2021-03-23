@@ -64,7 +64,7 @@ GNOME_PACKAGES=(
 
 ADDITIONAL_PACKAGES=(
 	'man'
-	'vim'
+	'neovim'
 	'xdg-user-dirs'
 	'chromium'
 	'code'
@@ -82,6 +82,8 @@ ADDITIONAL_PACKAGES=(
 	'libgnome-keyring'
 	'fuse2'
 	'pkgfile'
+	'wl-clipboard'
+	'xclip'
 )
 
 # https://addons.mozilla.org/addon/${addon}/

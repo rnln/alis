@@ -87,6 +87,8 @@ ssh_options='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
 alias ssh-insec="ssh $ssh_options"
 alias scp-insec="scp $ssh_options"
 
+alias vim="$EDITOR"
+
 # generate password
 function pwdgen () {
 	local length=${1:-9}

@@ -188,6 +188,7 @@ export SAVEHIST=100000
 
 eval "$(dircolors --sh "$ZDOTDIR"/.dircolors)"
 
+export EDITOR=nvim
 export PAGER=less
 export LESS='-ciJMR +Gg'
 export LESSHISTFILE="$XDG_CACHE_HOME"/lesshist
@@ -198,9 +199,6 @@ export LESS_TERMCAP_so=$(tput setaf 4; tput smso) # start standout-mode (blue ba
 export LESS_TERMCAP_se=$(tput sgr0)               # end standout-mode
 export LESS_TERMCAP_us=$(tput setaf 4; tput smul) # start underline (blue)
 export LESS_TERMCAP_ue=$(tput sgr0)               # end underline
-
-export EDITOR=vim
-export VIMINIT='source "$XDG_CONFIG_HOME"/vim/vimrc'
 
 export GNUPGHOME="$XDG_CONFIG_HOME"/gnupg
 
