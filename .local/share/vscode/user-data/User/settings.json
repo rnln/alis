@@ -28,10 +28,10 @@
 		"editor.foreground": "#ffffff",
 		"terminal.foreground": "#ffffff",
 		"editorSuggestWidget.foreground": "#ffffff",
-
+		
 		"editor.selectionBackground": "#3298ff66",
 		"terminal.selectionBackground": "#3298ff66",
-
+		
 		"terminal.ansiBlack": "#121212",
 		"terminal.ansiRed": "#e25563",
 		"terminal.ansiGreen": "#3e9a6f",
@@ -48,9 +48,10 @@
 		"terminal.ansiBrightMagenta": "#cbbbe9",
 		"terminal.ansiBrightCyan": "#0dcaf0",
 		"terminal.ansiBrightWhite": "#ffffff",
-
+		
 		"editorRuler.foreground": "#ffffff22",
 	},
+	"workbench.tree.indent": 14,
 	// @tag:usesOnlineServices
 	"extensions.autoUpdate": false,
 	"telemetry.enableCrashReporter": false,
@@ -130,7 +131,5 @@
 	"extensions.ignoreRecommendations": true,
 	"editor.showFoldingControls": "always",
 	"workbench.editor.enablePreview": true,
-	"git.autofetch": false,
-	"workbench.tree.indent":16,
 	"window.zoomLevel": 0
 }
