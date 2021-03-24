@@ -348,12 +348,27 @@ function install_paru () {
 }
 
 
-function update_configuration () {
+function setup_directories_environment_variables () {
 	# XDG Base Directory specification
 	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
 	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME"/.config}
 	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME"/.cache}
 	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
+
+	export LESSHISTFILE="$XDG_CACHE_HOME"/lesshist
+	export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode
+	export CARGO_HOME="$XDG_DATA_HOME"/cargo
+	export GOPATH="$XDG_DATA_HOME"/go
+	export PYLINTHOME="$XDG_CACHE_HOME"/pylint
+
+	export GNUPGHOME="$XDG_CONFIG_HOME"/gnupg
+	mkdir -p "$GNUPGHOME"
+	chmod 700 "$GNUPGHOME"
+}
+
+
+function update_configuration () {
+	setup_directories_environment_variables
 
 	if command -v pacman &>/dev/null; then
 		$SUDO pacman -Sy
@@ -417,8 +432,8 @@ function update_configuration () {
 	# 	sudo mkdir -p /usr/lib/electron/bin
 	# 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	# fi
-	rsync -a "$tempdir"/.config/Code/ "$XDG_CONFIG_HOME"/Code/
-	rm -rf "$tempdir"/.config/Code
+	rsync -a "$tempdir"/.local/share/vscode/user-data/User/ "$XDG_DATA_HOME"/vscode/user-data/User/
+	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
 	# local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
 	# local librewolf_home_temp="$tempdir"/.local/share/librewolf/librewolf.AppImage.home
@@ -650,15 +665,7 @@ function install_base () {
 function install_post () {
 	log -s -w "$ES_CYAN" 'Arch Linux post-installation'
 
-	# XDG Base Directory specification
-	# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME"/.config}
-	export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME"/.cache}
-	export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
-
-	export GNUPGHOME="$XDG_CONFIG_HOME"/gnupg
-	mkdir -p "$GNUPGHOME"
-	chmod 700 "$GNUPGHOME"
+	setup_directories_environment_variables
 
 	log -s 'sudo timeout preventing'
 	command -v sudo >/dev/null 2>&1 || {
