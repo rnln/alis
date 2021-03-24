@@ -202,7 +202,7 @@ export LESS_TERMCAP_ue=$(tput sgr0)               # end underline
 
 export GNUPGHOME="$XDG_CONFIG_HOME"/gnupg
 
-export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode-oss
+export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode
 
 export CARGO_HOME="$XDG_DATA_HOME"/cargo
 # export RUSTUP_HOME="$XDG_DATA_HOME"/rustup
