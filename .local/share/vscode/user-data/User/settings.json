@@ -131,5 +131,6 @@
 	"editor.showFoldingControls": "always",
 	"workbench.editor.enablePreview": true,
 	"git.autofetch": false,
+	"workbench.tree.indent":16,
 	"window.zoomLevel": 0
 }
