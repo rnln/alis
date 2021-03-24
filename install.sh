@@ -500,7 +500,7 @@ function update_configuration () {
 	# done
 	# log -f -i 1 'Firefox add-ons installation'
 
-	if [ ! -f "$XDG_DATA_HOME"/keepassxc/database.kdbx ] || ask 'Update KeePassXC database'; then
+	if [ ! -f "$XDG_DATA_HOME"/keepassxc/database.kdbx ] || ask -n 'Update KeePassXC database'; then
 		rm -f "$XDG_DATA_HOME"/keepassxc/database.kdbx
 		mkdir -p "$XDG_DATA_HOME"/keepassxc
 		cp "$tempdir"/.local/share/keepassxc/database.kdbx "$XDG_DATA_HOME"/keepassxc/database.kdbx
