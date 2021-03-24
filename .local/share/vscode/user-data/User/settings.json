@@ -18,7 +18,7 @@
 	"explorer.openEditors.visible": 0,
 	"breadcrumbs.enabled": false,
 	"editor.find.cursorMoveOnType": false,
-	"window.menuBarVisibility": "hidden",
+	"window.menuBarVisibility": "toggle",
 	"files.eol": "\n",
 	"terminal.integrated.drawBoldTextInBrightColors": false,
 	"workbench.colorCustomizations": {
