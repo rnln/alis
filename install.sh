@@ -230,10 +230,11 @@ function setup_color_scheme () {
 
 	export FOREGROUND=$WHITE
 	export BACKGROUND=$BLACK
-	export BACKGROUND_HIGHLIGHT='#1f4871' # #3298ff66 on #121212 background
+	export BACKGROUND_HIGHLIGHT='#3298ff66'
+	export BACKGROUND_HIGHLIGHT_OPAQUE='#1f4871' # $BACKGROUND_HIGHLIGHT on #121212 background
 
 	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
-	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT'
+	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$BACKGROUND_HIGHLIGHT_OPAQUE,$PALETTE'
 }
 
 
@@ -400,7 +401,7 @@ function update_configuration () {
 		rsync -a "$HOME"/.ssh/ "$XDG_CONFIG_HOME"/ssh/
 		rm -rf "$HOME"/.ssh
 	fi
-	rsync -a "$tempdir"/.config/ssh/ "$XDG_CONFIG_HOME"/ssh/
+	rsync -a {"$tempdir"/.config,"$XDG_CONFIG_HOME"}/ssh/
 	envsubst '$XDG_CONFIG_HOME' <"$tempdir"/.config/ssh/config >"$XDG_CONFIG_HOME"/ssh/config
 	[ ! -f "$XDG_CONFIG_HOME"/ssh/id_ed25519 ] && ssh-keygen -q -P '' -t ed25519        -f "$XDG_CONFIG_HOME"/ssh/id_ed25519
 	[ ! -f "$XDG_CONFIG_HOME"/ssh/id_rsa ]     && ssh-keygen -q -P '' -t rsa -b 4096 -o -f "$XDG_CONFIG_HOME"/ssh/id_rsa
@@ -415,7 +416,7 @@ function update_configuration () {
 	if [ -f /etc/pacman.conf ]; then
 		pacman -Q paru &>/dev/null || install_paru
 		sudo mv "$tempdir"/.config/paru/pacman.conf /etc/pacman.conf
-		rsync -a "$tempdir"/.config/paru/ "$XDG_CONFIG_HOME"/paru/
+		rsync -a {"$tempdir"/.config,"$XDG_CONFIG_HOME"}/paru/
 		sudo pacman -Sy
 	fi
 	rm -rf "$tempdir"/.config/paru
@@ -433,13 +434,14 @@ function update_configuration () {
 	# 	sudo ln /usr/bin/code-oss /usr/lib/electron/bin/code-oss
 	# fi
 	mkdir -p "$XDG_DATA_HOME"/vscode/user-data/User
-	rsync -a "$tempdir"/.local/share/vscode/user-data/User/ "$XDG_DATA_HOME"/vscode/user-data/User/
+	rsync -a {"$tempdir"/.local/share,"$XDG_DATA_HOME"}/vscode/user-data/User/
+	envsubst "$COLORS_LIST" <"$tempdir"/.local/share/vscode/user-data/User/settings.json >"$XDG_DATA_HOME"/vscode/user-data/User/settings.json
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
 	# local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
 	# local librewolf_home_temp="$tempdir"/.local/share/librewolf/librewolf.AppImage.home
 	# if [ -d "$HOME"/.librewolf ]; then
-	# 	rsync -a "$HOME"/.librewolf/ "$librewolf_home"/.librewolf/
+	# 	rsync -a {"$HOME","$librewolf_home"}/.librewolf/
 	# 	rm -rf "$HOME"/.librewolf
 	# 	paru -Rcns librewolf
 	# fi
@@ -466,7 +468,7 @@ function update_configuration () {
 	# 	kill $librewolf_pid
 	# 	rm -rf "$librewolf_home"/.librewolf/*.default*
 	# fi
-	# rsync -a "$librewolf_home_temp"/.librewolf/ "$librewolf_home"/.librewolf/
+	# rsync -a {"$librewolf_home_temp","$librewolf_home"}/.librewolf/
 	# if [ -f "$librewolf_home"/.librewolf/installs.ini ]; then
 	# 	export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home"/.librewolf/installs.ini`
 	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/installs.ini >"$librewolf_home"/.librewolf/installs.ini
@@ -796,7 +798,7 @@ function install_post () {
 		| xargs -0 sed -i 's/\(Up to date\) :)/\1/g'
 
 	export terminal_profile=`uuidgen`
-	envsubst '$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$PALETTE,$apps_to_hide,$terminal_profile' <"$HOME"/.config/dconf/dump.ini | dconf load /
+	envsubst "$COLORS_LIST,\$apps_to_hide,\$terminal_profile" <"$HOME"/.config/dconf/dump.ini | dconf load /
 	rm "$HOME"/.config/dconf/dump.ini
 	log -f 'GNOME configuring'
 
