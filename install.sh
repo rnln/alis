@@ -369,7 +369,6 @@ function setup_directories_environment_variables () {
 
 
 function update_configuration () {
-	setup_directories_environment_variables
 
 	if command -v pacman &>/dev/null; then
 		$SUDO pacman -Sy
@@ -668,8 +667,6 @@ function install_base () {
 function install_post () {
 	log -s -w "$ES_CYAN" 'Arch Linux post-installation'
 
-	setup_directories_environment_variables
-
 	log -s 'sudo timeout preventing'
 	command -v sudo >/dev/null 2>&1 || {
 		log -w "$ES_RED" "sudo isn't installed"
@@ -820,18 +817,19 @@ function install_post () {
 
 setup_terminal_colors
 setup_color_scheme
+setup_directories_environment_variables
 
 if [ "$UPDATE_CONFIGURATION" == true ]; then
 	update_configuration
-elif [ "$MODE" == 'post' ]; then
-	install_post
 else
-	install_base
-fi
-
-check_system_errors
-
-if ask 'Reboot now'; then
-	revert_sudoers
-	reboot
+	if [ "$MODE" == 'post' ]; then
+		install_post
+	else
+		install_base
+	fi
+	check_system_errors
+	if ask 'Reboot now'; then
+		revert_sudoers
+		reboot
+	fi
 fi
