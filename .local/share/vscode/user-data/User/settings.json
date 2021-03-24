@@ -130,5 +130,6 @@
 	"extensions.ignoreRecommendations": true,
 	"editor.showFoldingControls": "always",
 	"workbench.editor.enablePreview": true,
+	"git.autofetch": false,
 	"window.zoomLevel": 0
 }
