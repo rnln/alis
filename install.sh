@@ -280,26 +280,34 @@ function log () {
 
 function ask () {
 	# -i <depth>  Add indent in message beggining
+	# -n          Set 'no' as default answer
 	indent=''
-	while getopts 'i:' option; do
+	question_ending="? [${ES_BOLD}Y${ES_RESET}|n] "
+	default=0
+	while getopts 'i:n' option; do
 		case "$option" in
-			i) indent="-i $OPTARG"
+			i) indent="-i $OPTARG" ;;
+			n) question_ending="? [y|${ES_BOLD}N${ES_RESET}] "
+			   default=1
 		esac
 	done
 
 	result=1
 	while true; do
-		log $indent -n -e '? [Y/n] ' "$@"
+		log $indent -n -e "$question_ending" "$@"
 		read -e answer
 		case $answer in
-			[Nn]*)
-				break
-				;;
-			[Yy]*|'')
+			'')
+				echo
+				result=$default
+				break ;;
+			[Yy]*)
 				result=0
-				break
-				;;
-			*) log $indent 'Try again'
+				break ;;
+			[Nn]*)
+				break ;;
+			*)
+				log $indent 'Try again'
 		esac
 	done
 	return $result
