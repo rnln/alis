@@ -1,0 +1,4 @@
+[
+{ "key": "ctrl+alt+=",            "command": "wwm.aligncode",
+                                     "when": "editorTextFocus && !editorReadonly" },
+]

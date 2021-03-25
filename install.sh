@@ -140,6 +140,24 @@ APPS_TO_SHOW=(
 )
 APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 
+VSCODE_EXTENSIONS=(
+	'aaron-bond.better-comments'
+	'albymor.increment-selection'
+	'christian-kohler.path-intellisense'
+	'CoenraadS.bracket-pair-colorizer'
+	'esbenp.prettier-vscode'
+	'firefox-devtools.vscode-firefox-debug'
+	'kamikillerto.vscode-colorize'
+	'ms-python.python'
+	'ms-vscode-remote.remote-ssh'
+	'msjsdiag.debugger-for-chrome'
+	'ritwickdey.LiveServer'
+	'wix.vscode-import-cost'
+	'wwm.better-align'
+	'xabikos.JavaScriptSnippets'
+	'yzhang.markdown-all-in-one'
+)
+
 
 function invalid_option () {
 	cat <<-EOF >&2
@@ -446,6 +464,9 @@ function update_configuration () {
 	mkdir -p "$XDG_DATA_HOME"/vscode/user-data/User
 	rsync -a {"$tempdir"/.local/share,"$XDG_DATA_HOME"}/vscode/user-data/User/
 	envsubst "$COLORS_LIST" <"$tempdir"/.local/share/vscode/user-data/User/settings.json >"$XDG_DATA_HOME"/vscode/user-data/User/settings.json
+	for extension in "${VSCODE_EXTENSIONS[@]}"; do
+		code --install-extension "$extension"
+	done
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
 	# local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
