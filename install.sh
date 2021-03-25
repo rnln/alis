@@ -466,7 +466,7 @@ function update_configuration () {
 	envsubst "$COLORS_LIST" <"$tempdir"/.local/share/vscode/user-data/User/settings.json >"$XDG_DATA_HOME"/vscode/user-data/User/settings.json
 	local installed_extensions=\|`code --list-extensions | tr '\n' '\|'`
 	for extension in "${VSCODE_EXTENSIONS[@]}"; do
-		if [ -z "${installed_extensions##*$extension*}" ]; then
+		if grep -q "\|$extension\|" <<<"$installed_extensions"; then
 			code --install-extension "$extension"
 		fi
 	done
