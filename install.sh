@@ -90,6 +90,7 @@ FIREFOX_ADDONS=(
 	'copy-selected-tabs-to-clipboar'
 	'darkvk'
 	'default-bookmark-folder'
+	'firemonkey'
 	'gnome-shell-integration'
 	'image-search-options'
 	'keepassxc-browser'
