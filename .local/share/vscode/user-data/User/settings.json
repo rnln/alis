@@ -102,8 +102,7 @@
 		"**/.idea": true
 	},
 
-	// Extensions
-
+	// * Extensions
 	// Python
 	"python.linting.enabled": true,
 	"python.linting.pylintEnabled": true,
@@ -116,7 +115,7 @@
 	"editor.matchBrackets": "never",
 	"better-comments.tags": [
 		{ "tag": "*",    "color": "${FOREGROUND}7c", "bold": true },
-		{ "tag": "//",   "color": "${FOREGROUND}3c", "strikethrough": true },
+		{ "tag": "//",   "color": "${FOREGROUND}3c" },
 		{ "tag": "!",    "color": "${RED}7c" },
 		{ "tag": "?",    "color": "${BLUE}7c" },
 		{ "tag": "todo", "color": "${YELLOW}7c" }
@@ -125,7 +124,12 @@
 	// Bracket Pair Colorizer
 	"bracketPairColorizer.consecutivePairColors": [ "()", "[]", "{}", [ "$GREEN", "$YELLOW", "$BLUE", "$MAGENTA", "$CYAN" ], "$RED" ],
 	"bracketPairColorizer.forceIterationColorCycle": true,
-	"bracketPairColorizer.scopeLineCSS": [ "borderStyle: none", "backgroundColor: {color}; opacity: .05" ],
+	"bracketPairColorizer.scopeLineCSS": [
+		"borderStyle: solid",
+		"borderWidth: 1px",
+		"borderColor: {color}; opacity: .15",
+		"backgroundColor: {color}; opacity: .05"
+	],
 	"bracketPairColorizer.highlightActiveScope": true,
 	"bracketPairColorizer.showBracketsInRuler": true,
 	"bracketPairColorizer.rulerPosition": "Left",
