@@ -140,6 +140,7 @@ APPS_TO_SHOW=(
 )
 APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 
+# https://marketplace.visualstudio.com/items?itemName={extension}
 VSCODE_EXTENSIONS=(
 	'aaron-bond.better-comments'
 	'albymor.increment-selection'
@@ -157,6 +158,34 @@ VSCODE_EXTENSIONS=(
 	'xabikos.JavaScriptSnippets'
 	'yzhang.markdown-all-in-one'
 )
+
+function setup_color_scheme () {
+	export BLACK='#121212'
+	export RED='#ff714f'
+	export GREEN='#00d965'
+	export YELLOW='#e0e000'
+	export BLUE='#7e9df9'
+	export MAGENTA='#ff5de1'
+	export CYAN='#90cbdb'
+	export WHITE='#ffffff'
+
+	export BLACK_BRIGHT='#7c7c7c'
+	export RED_BRIGHT=$RED
+	export GREEN_BRIGHT=$GREEN
+	export YELLOW_BRIGHT=$YELLOW
+	export BLUE_BRIGHT=$BLUE
+	export MAGENTA_BRIGHT=$MAGENTA
+	export CYAN_BRIGHT=$CYAN
+	export WHITE_BRIGHT=$WHITE
+
+	export FOREGROUND=$WHITE
+	export BACKGROUND=$BLACK
+	export BACKGROUND_HIGHLIGHT='#3298ff66'
+	export BACKGROUND_HIGHLIGHT_OPAQUE='#1f4871' # $BACKGROUND_HIGHLIGHT on #121212 background
+
+	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
+	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$BACKGROUND_HIGHLIGHT_OPAQUE,$PALETTE'
+}
 
 
 function invalid_option () {
@@ -224,35 +253,6 @@ function setup_terminal_colors () {
 		ES_BOLD=`tput bold`
 		ES_RESET=`tput sgr0`
 	fi
-}
-
-
-function setup_color_scheme () {
-	export BLACK='#121212'
-	export RED='#ff714f'
-	export GREEN='#00d965'
-	export YELLOW='#e0e000'
-	export BLUE='#7e9df9'
-	export MAGENTA='#ff5de1'
-	export CYAN='#90cbdb'
-	export WHITE='#ffffff'
-
-	export BLACK_BRIGHT='#555555'
-	export RED_BRIGHT=$RED
-	export GREEN_BRIGHT=$GREEN
-	export YELLOW_BRIGHT=$YELLOW
-	export BLUE_BRIGHT=$BLUE
-	export MAGENTA_BRIGHT=$MAGENTA
-	export CYAN_BRIGHT=$CYAN
-	export WHITE_BRIGHT=$WHITE
-
-	export FOREGROUND=$WHITE
-	export BACKGROUND=$BLACK
-	export BACKGROUND_HIGHLIGHT='#3298ff66'
-	export BACKGROUND_HIGHLIGHT_OPAQUE='#1f4871' # $BACKGROUND_HIGHLIGHT on #121212 background
-
-	export PALETTE="['$BLACK', '$RED', '$GREEN', '$YELLOW', '$BLUE', '$MAGENTA', '$CYAN', '$WHITE', '$BLACK_BRIGHT', '$RED_BRIGHT', '$GREEN_BRIGHT', '$YELLOW_BRIGHT', '$BLUE_BRIGHT', '$MAGENTA_BRIGHT', '$CYAN_BRIGHT', '$WHITE_BRIGHT']"
-	COLORS_LIST='$BLACK,$RED,$GREEN,$YELLOW,$BLUE,$MAGENTA,$CYAN,$WHITE,$BLACK_BRIGHT,$RED_BRIGHT,$GREEN_BRIGHT,$YELLOW_BRIGHT,$BLUE_BRIGHT,$MAGENTA_BRIGHT,$CYAN_BRIGHT,$WHITE_BRIGHT,$FOREGROUND,$BACKGROUND,$BACKGROUND_HIGHLIGHT,$BACKGROUND_HIGHLIGHT_OPAQUE,$PALETTE'
 }
 
 

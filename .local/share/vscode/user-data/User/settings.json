@@ -29,35 +29,38 @@
 	"workbench.tree.renderIndentGuides": "always",
 
 	// Coloring
-	"workbench.colorCustomizations": {
-		"[Default Dark+]": {
-			"editor.background":              "#121212",
-			"terminal.background":            "#121212",
-			"editor.foreground":              "#ffffff",
-			"terminal.foreground":            "#ffffff",
-			"editorSuggestWidget.foreground": "#ffffff",
-			"terminal.ansiBlack":             "#121212",
-			"terminal.ansiRed":               "#ff714f",
-			"terminal.ansiGreen":             "#00d965",
-			"terminal.ansiYellow":            "#e0e000",
-			"terminal.ansiBlue":              "#7e9df9",
-			"terminal.ansiMagenta":           "#ff5de1",
-			"terminal.ansiCyan":              "#90cbdb",
-			"terminal.ansiWhite":             "#ffffff",
-			"terminal.ansiBrightBlack":       "#555555",
-			"terminal.ansiBrightRed":         "#ff714f",
-			"terminal.ansiBrightGreen":       "#00d965",
-			"terminal.ansiBrightYellow":      "#e0e000",
-			"terminal.ansiBrightBlue":        "#7e9df9",
-			"terminal.ansiBrightMagenta":     "#ff5de1",
-			"terminal.ansiBrightCyan":        "#90cbdb",
-			"terminal.ansiBrightWhite":       "#ffffff",
-			"editor.selectionBackground":     "#3298ff66",
-			"terminal.selectionBackground":   "#3298ff66",
+	"workbench.colorCustomizations": { "[Default Dark+]": {
+		"editor.background":              "$BACKGROUND",
+		"terminal.background":            "$BACKGROUND",
+		"editor.foreground":              "$FOREGROUND",
+		"terminal.foreground":            "$FOREGROUND",
+		"editorSuggestWidget.foreground": "$FOREGROUND",
+		"terminal.ansiBlack":             "$BLACK",
+		"terminal.ansiRed":               "$RED",
+		"terminal.ansiGreen":             "$GREEN",
+		"terminal.ansiYellow":            "$YELLOW",
+		"terminal.ansiBlue":              "$BLUE",
+		"terminal.ansiMagenta":           "$MAGENTA",
+		"terminal.ansiCyan":              "$CYAN",
+		"terminal.ansiWhite":             "$WHITE",
+		"terminal.ansiBrightBlack":       "$BLACK_BRIGHT",
+		"terminal.ansiBrightRed":         "$RED_BRIGHT",
+		"terminal.ansiBrightGreen":       "$GREEN_BRIGHT",
+		"terminal.ansiBrightYellow":      "$YELLOW_BRIGHT",
+		"terminal.ansiBrightBlue":        "$BLUE_BRIGHT",
+		"terminal.ansiBrightMagenta":     "$MAGENTA_BRIGHT",
+		"terminal.ansiBrightCyan":        "$CYAN_BRIGHT",
+		"terminal.ansiBrightWhite":       "$WHITE_BRIGHT",
+		"editor.selectionBackground":     "$BACKGROUND_HIGHLIGHT",
+		"terminal.selectionBackground":   "$BACKGROUND_HIGHLIGHT",
 
-			"editorRuler.foreground": "#ffffff22"
-		}
-	},
+		"editorRuler.foreground": "${WHITE}22"
+	}},
+	"editor.tokenColorCustomizations": { "[Default Dark+]": {
+		"textMateRules": [
+			{ "scope": "comment", "settings": { "foreground": "${FOREGROUND}7c", "fontStyle": "italic" }}
+		]
+	}},
 
 	// Online services (@tag:usesOnlineServices)
 	// "extensions.autoCheckUpdates": false,
@@ -71,39 +74,24 @@
 
 	// Tabulation
 	"editor.insertSpaces": false, "editor.tabSize": 4,
-	"[python]":     { "editor.insertSpaces": true },
-	"[rust]":       { "editor.insertSpaces": true },
+	"[html]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
 	"[css]":        { "editor.insertSpaces": true, "editor.tabSize": 2 },
 	"[scss]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
-	"[html]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
 	"[javascript]": { "editor.insertSpaces": true, "editor.tabSize": 2 },
 	"[json]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
 	"[jsonc]":      { "editor.insertSpaces": true, "editor.tabSize": 2 },
+	"[python]":     { "editor.insertSpaces": true },
+	"[rust]":       { "editor.insertSpaces": true },
 
 	// Editor associations
 	"workbench.editorAssociations": [
-		{
-			"filenamePattern": "*.bin",
-			"viewType": "hexEditor.hexedit"
-		},
-		{
-			"filenamePattern": "*.dll",
-			"viewType": "hexEditor.hexedit"
-		},
-		{
-			"filenamePattern": "*.exe",
-			"viewType": "hexEditor.hexedit"
-		},
-		{
-			"filenamePattern": "*.hex",
-			"viewType": "hexEditor.hexedit"
-		},
-		{
-			"viewType": "jupyter.notebook.ipynb",
-			"filenamePattern": "*.ipynb"
-		}
+		{ "filenamePattern": "*.bin",   "viewType": "hexEditor.hexedit" },
+		{ "filenamePattern": "*.dll",   "viewType": "hexEditor.hexedit" },
+		{ "filenamePattern": "*.exe",   "viewType": "hexEditor.hexedit" },
+		{ "filenamePattern": "*.hex",   "viewType": "hexEditor.hexedit" },
+		{ "filenamePattern": "*.ipynb", "viewType": "jupyter.notebook.ipynb" }
 	],
-	
+
 	// Misc
 	"editor.suggestSelection": "first",
 	"editor.wordBasedSuggestions": false,
@@ -127,17 +115,17 @@
 	// Better Comments
 	"editor.matchBrackets": "never",
 	"better-comments.tags": [
-		{ "tag": "!",    "color": "$RED" },
-		{ "tag": "?",    "color": "$BLUE" },
-		{ "tag": "//",   "color": "$BLACK_BRIGHT", "strikethrough": true },
-		{ "tag": "todo", "color": "$YELLOW" },
-		{ "tag": "*",    "color": "$GREEN" }
+		{ "tag": "*",    "color": "${FOREGROUND}7c", "bold": true },
+		{ "tag": "//",   "color": "${FOREGROUND}3c", "strikethrough": true },
+		{ "tag": "!",    "color": "${RED}7c" },
+		{ "tag": "?",    "color": "${BLUE}7c" },
+		{ "tag": "todo", "color": "${YELLOW}7c" }
 	],
 
 	// Bracket Pair Colorizer
 	"bracketPairColorizer.consecutivePairColors": [ "()", "[]", "{}", [ "$GREEN", "$YELLOW", "$BLUE", "$MAGENTA", "$CYAN" ], "$RED" ],
 	"bracketPairColorizer.forceIterationColorCycle": true,
-	"bracketPairColorizer.scopeLineCSS": [ "borderStyle : none", "backgroundColor: {color}; opacity: .05" ],
+	"bracketPairColorizer.scopeLineCSS": [ "borderStyle: none", "backgroundColor: {color}; opacity: .05" ],
 	"bracketPairColorizer.highlightActiveScope": true,
 	"bracketPairColorizer.showBracketsInRuler": true,
 	"bracketPairColorizer.rulerPosition": "Left",
