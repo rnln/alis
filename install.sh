@@ -472,60 +472,60 @@ function update_configuration () {
 	done
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
-	# local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
-	# local librewolf_home_temp="$tempdir"/.local/share/librewolf/librewolf.AppImage.home
-	# if [ -d "$HOME"/.librewolf ]; then
-	# 	rsync -a {"$HOME","$librewolf_home"}/.librewolf/
-	# 	rm -rf "$HOME"/.librewolf
-	# 	paru -Rcns librewolf
-	# fi
-	# if [ ! -f "$XDG_DATA_HOME"/librewolf/librewolf.AppImage ]; then
-	# 	local librewolf_gitlab_graphql='[{
-	# 		"operationName":"allReleases",
-	# 		"variables":{"fullPath":"librewolf-community/browser/linux","first":1},
-	# 		"query":"query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release{assets{links{nodes{name url}}}}"
-	# 	}]'
-	# 	local librewolf_appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$librewolf_gitlab_graphql"`
-	# 	librewolf_appimage_url=`echo "$librewolf_appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
-	# 	mkdir -p "$XDG_DATA_HOME"/librewolf && curl -o "$XDG_DATA_HOME"/librewolf/librewolf.AppImage "$librewolf_appimage_url"
-	# 	chmod +x "$XDG_DATA_HOME"/librewolf/librewolf.AppImage
-	# 	sudo ln -s "$XDG_DATA_HOME"/librewolf/librewolf.AppImage /usr/bin/librewolf
-	# 	librewolf --appimage-portable-home
-	# fi
-	# if [ ! -f "$librewolf_home"/.librewolf/installs.ini ]; then
-	# 	librewolf --headless </dev/null &>/dev/null &
-	# 	local librewolf_pid=$!
-	# 	while true; do
-	# 		[ -f "$librewolf_home"/.librewolf/profiles.ini ] && break
-	# 		sleep 0.1
-	# 	done
-	# 	kill $librewolf_pid
-	# 	rm -rf "$librewolf_home"/.librewolf/*.default*
-	# fi
-	# rsync -a {"$librewolf_home_temp","$librewolf_home"}/.librewolf/
-	# if [ -f "$librewolf_home"/.librewolf/installs.ini ]; then
-	# 	export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home"/.librewolf/installs.ini`
-	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/installs.ini >"$librewolf_home"/.librewolf/installs.ini
-	# 	envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/profiles.ini >"$librewolf_home"/.librewolf/profiles.ini
-	# else
-	# 	rm -rf "$librewolf_home"/.librewolf/*.ini
-	# fi
-	# envsubst '$USER,$HOST' <"$librewolf_home_temp"/.librewolf/default/user.js >"$librewolf_home"/.librewolf/default/user.js
+	local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
+	local librewolf_home_temp="$tempdir"/.local/share/librewolf/librewolf.AppImage.home
+	if [ -d "$HOME"/.librewolf ]; then
+		rsync -a {"$HOME","$librewolf_home"}/.librewolf/
+		rm -rf "$HOME"/.librewolf
+		paru -Rcns librewolf
+	fi
+	if [ ! -f "$XDG_DATA_HOME"/librewolf/librewolf.AppImage ]; then
+		local librewolf_gitlab_graphql='[{
+			"operationName":"allReleases",
+			"variables":{"fullPath":"librewolf-community/browser/linux","first":1},
+			"query":"query allReleases($fullPath:ID!,$first:Int){project(fullPath:$fullPath){releases(first:$first){nodes{...Release}}}}fragment Release on Release{assets{links{nodes{name url}}}}"
+		}]'
+		local librewolf_appimage_url=`curl -s 'https://gitlab.com/api/graphql' -H 'content-type: application/json' --data-raw "$librewolf_gitlab_graphql"`
+		librewolf_appimage_url=`echo "$librewolf_appimage_url" | grep -oP "https://[^\"]+?$(uname -m).AppImage(?=\")"`
+		mkdir -p "$XDG_DATA_HOME"/librewolf && curl -o "$XDG_DATA_HOME"/librewolf/librewolf.AppImage "$librewolf_appimage_url"
+		chmod +x "$XDG_DATA_HOME"/librewolf/librewolf.AppImage
+		sudo ln -s "$XDG_DATA_HOME"/librewolf/librewolf.AppImage /usr/bin/librewolf
+		librewolf --appimage-portable-home
+	fi
+	if [ ! -f "$librewolf_home"/.librewolf/installs.ini ]; then
+		librewolf --headless </dev/null &>/dev/null &
+		local librewolf_pid=$!
+		while true; do
+			[ -f "$librewolf_home"/.librewolf/profiles.ini ] && break
+			sleep 0.1
+		done
+		kill $librewolf_pid
+		rm -rf "$librewolf_home"/.librewolf/*.default*
+	fi
+	rsync -a {"$librewolf_home_temp","$librewolf_home"}/.librewolf/
+	if [ -f "$librewolf_home"/.librewolf/installs.ini ]; then
+		export librefox_install_hash=`grep -oP '\[\K.+(?=])' "$librewolf_home"/.librewolf/installs.ini`
+		envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/installs.ini >"$librewolf_home"/.librewolf/installs.ini
+		envsubst '$librefox_install_hash' <"$librewolf_home_temp"/.librewolf/profiles.ini >"$librewolf_home"/.librewolf/profiles.ini
+	else
+		rm -rf "$librewolf_home"/.librewolf/*.ini
+	fi
+	envsubst '$USER,$HOST' <"$librewolf_home_temp"/.librewolf/default/user.js >"$librewolf_home"/.librewolf/default/user.js
 	rm -rf "$tempdir"/.local/share/librewolf
 
-	# mkdir -p "$librewolf_home"/.librewolf/default/extensions
-	# addons_root='https://addons.mozilla.org/firefox'
-	# log -s -i 1 'Firefox add-ons installation'
-	# for addon in "${FIREFOX_ADDONS[@]}"; do
-	# 	log -i 2 -w "$ES_RESET" -e '...' "$addon"
-	# 	addon_page=`curl -sL "$addons_root/addon/$addon"`
-	# 	addon_guid=`echo "$addon_page" | grep -oP 'byGUID":{"\K.+?(?=":)'`
-	# 	if [ ! -f "$librewolf_home"/.librewolf/default/extensions/"$addon_guid".xpi ]; then
-	# 		xpi_url="$addons_root"/downloads/file/`echo "$addon_page" | grep -oP 'file/\K.+\.xpi(?=">Download file)'`
-	# 		curl -fsSL "$xpi_url" -o "$librewolf_home"/.librewolf/default/extensions/"$addon_guid".xpi
-	# 	fi
-	# done
-	# log -f -i 1 'Firefox add-ons installation'
+	mkdir -p "$librewolf_home"/.librewolf/default/extensions
+	addons_root='https://addons.mozilla.org/firefox'
+	log -s -i 1 'Firefox add-ons installation'
+	for addon in "${FIREFOX_ADDONS[@]}"; do
+		log -i 2 -w "$ES_RESET" -e '...' "$addon"
+		addon_page=`curl -sL "$addons_root/addon/$addon"`
+		addon_guid=`echo "$addon_page" | grep -oP 'byGUID":{"\K.+?(?=":)'`
+		if [ ! -f "$librewolf_home"/.librewolf/default/extensions/"$addon_guid".xpi ]; then
+			xpi_url="$addons_root"/downloads/file/`echo "$addon_page" | grep -oP 'file/\K.+\.xpi(?=">Download file)'`
+			curl -fsSL "$xpi_url" -o "$librewolf_home"/.librewolf/default/extensions/"$addon_guid".xpi
+		fi
+	done
+	log -f -i 1 'Firefox add-ons installation'
 
 	if [ ! -f "$XDG_DATA_HOME"/keepassxc/database.kdbx ] || ask -n 'Update KeePassXC database'; then
 		rm -f "$XDG_DATA_HOME"/keepassxc/database.kdbx
