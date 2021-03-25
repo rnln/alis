@@ -247,7 +247,6 @@ function log () {
 	# -e          End message with provided string, '.' by default
 	# -w          Wrap message with provided escape sequence
 
-	local OPTIND=1
 	local DEPTH=0
 	local FORMAT="$ES_BOLD"
 	local PADDING=''
@@ -255,6 +254,7 @@ function log () {
 	local END='.'
 	local STATUS=''
 
+	local OPTIND=1
 	while getopts 'i:e:fnsw:' option; do
 		case "$option" in
 			i) DEPTH="$OPTARG" ;;
@@ -281,25 +281,28 @@ function log () {
 function ask () {
 	# -i <depth>  Add indent in message beggining
 	# -n          Set 'no' as default answer
-	indent=''
-	question_ending="? [${ES_BOLD}Y${ES_RESET}|n] "
-	default=0
+
+	local indent=''
+	local question_ending="? [${ES_BOLD}Y${ES_RESET}|n] "
+	local result=1
+	local default_result=0
+
+	local OPTIND=1
 	while getopts 'i:n' option; do
 		case "$option" in
 			i) indent="-i $OPTARG" ;;
 			n) question_ending="? [y|${ES_BOLD}N${ES_RESET}] "
-			   default=1
+			   default_result=1 ;;
 		esac
 	done
 
-	result=1
 	while true; do
 		log $indent -n -e "$question_ending" "$@"
 		read -e answer
 		case $answer in
 			'')
 				echo
-				result=$default
+				result=$default_result
 				break ;;
 			[Yy]*)
 				result=0
