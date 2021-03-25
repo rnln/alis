@@ -464,12 +464,12 @@ function update_configuration () {
 	mkdir -p "$XDG_DATA_HOME"/vscode/user-data/User
 	rsync -a {"$tempdir"/.local/share,"$XDG_DATA_HOME"}/vscode/user-data/User/
 	envsubst "$COLORS_LIST" <"$tempdir"/.local/share/vscode/user-data/User/settings.json >"$XDG_DATA_HOME"/vscode/user-data/User/settings.json
-	local installed_extensions=\|`code --list-extensions | tr '\n' '\|'`
-	for extension in "${VSCODE_EXTENSIONS[@]}"; do
-		if grep -q "\|$extension\|" <<<"$installed_extensions"; then
-			code --install-extension "$extension"
-		fi
-	done
+	# local installed_extensions=\|`code --list-extensions | tr '\n' '\|'`
+	# for extension in "${VSCODE_EXTENSIONS[@]}"; do
+	# 	if ! grep -q "\|$extension\|" <<<"$installed_extensions"; then
+	# 		code --install-extension "$extension"
+	# 	fi
+	# done
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
 	# local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
