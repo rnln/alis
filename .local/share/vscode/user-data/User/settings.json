@@ -31,29 +31,29 @@
 	// Coloring
 	"workbench.colorCustomizations": {
 		"[Default Dark+]": {
-			"editor.background":              "$BACKGROUND",
-			"terminal.background":            "$BACKGROUND",
-			"editor.foreground":              "$FOREGROUND",
-			"terminal.foreground":            "$FOREGROUND",
-			"editorSuggestWidget.foreground": "$FOREGROUND",
-			"terminal.ansiBlack":             "$BLACK",
-			"terminal.ansiRed":               "$RED",
-			"terminal.ansiGreen":             "$GREEN",
-			"terminal.ansiYellow":            "$YELLOW",
-			"terminal.ansiBlue":              "$BLUE",
-			"terminal.ansiMagenta":           "$MAGENTA",
-			"terminal.ansiCyan":              "$CYAN",
-			"terminal.ansiWhite":             "$WHITE",
-			"terminal.ansiBrightBlack":       "$BLACK_BRIGHT",
-			"terminal.ansiBrightRed":         "$RED_BRIGHT",
-			"terminal.ansiBrightGreen":       "$GREEN_BRIGHT",
-			"terminal.ansiBrightYellow":      "$YELLOW_BRIGHT",
-			"terminal.ansiBrightBlue":        "$BLUE_BRIGHT",
-			"terminal.ansiBrightMagenta":     "$MAGENTA_BRIGHT",
-			"terminal.ansiBrightCyan":        "$CYAN_BRIGHT",
-			"terminal.ansiBrightWhite":       "$WHITE_BRIGHT",
-			"editor.selectionBackground":     "$BACKGROUND_HIGHLIGHT",
-			"terminal.selectionBackground":   "$BACKGROUND_HIGHLIGHT",
+			"editor.background":              "#121212",
+			"terminal.background":            "#121212",
+			"editor.foreground":              "#ffffff",
+			"terminal.foreground":            "#ffffff",
+			"editorSuggestWidget.foreground": "#ffffff",
+			"terminal.ansiBlack":             "#121212",
+			"terminal.ansiRed":               "#ff714f",
+			"terminal.ansiGreen":             "#00d965",
+			"terminal.ansiYellow":            "#e0e000",
+			"terminal.ansiBlue":              "#7e9df9",
+			"terminal.ansiMagenta":           "#ff5de1",
+			"terminal.ansiCyan":              "#90cbdb",
+			"terminal.ansiWhite":             "#ffffff",
+			"terminal.ansiBrightBlack":       "#555555",
+			"terminal.ansiBrightRed":         "#ff714f",
+			"terminal.ansiBrightGreen":       "#00d965",
+			"terminal.ansiBrightYellow":      "#e0e000",
+			"terminal.ansiBrightBlue":        "#7e9df9",
+			"terminal.ansiBrightMagenta":     "#ff5de1",
+			"terminal.ansiBrightCyan":        "#90cbdb",
+			"terminal.ansiBrightWhite":       "#ffffff",
+			"editor.selectionBackground":     "#3298ff66",
+			"terminal.selectionBackground":   "#3298ff66",
 
 			"editorRuler.foreground": "#ffffff22"
 		}
@@ -103,20 +103,45 @@
 			"filenamePattern": "*.ipynb"
 		}
 	],
-
-	// Python
-	"python.linting.enabled": true,
-	"python.linting.pylintEnabled": true,
-	"python.pythonPath": "/usr/bin/python",
-
+	
 	// Misc
 	"editor.suggestSelection": "first",
 	"editor.wordBasedSuggestions": false,
+	"files.restoreUndoStack": true,
 	"files.exclude": {
 		"**/.git": true,
 		"**/.DS_Store": true,
 		"**/.idea": true
 	},
 
-	"window.zoomLevel": 0
+	// Extensions
+
+	// Python
+	"python.linting.enabled": true,
+	"python.linting.pylintEnabled": true,
+	"python.pythonPath": "/usr/bin/python",
+
+	// Better Align
+	"alignment.indentBase": "activeline",
+
+	// Better Comments
+	"editor.matchBrackets": "never",
+	"better-comments.tags": [
+		{ "tag": "!",    "color": "$RED" },
+		{ "tag": "?",    "color": "$BLUE" },
+		{ "tag": "//",   "color": "$BLACK_BRIGHT", "strikethrough": true },
+		{ "tag": "todo", "color": "$YELLOW" },
+		{ "tag": "*",    "color": "$GREEN" }
+	],
+
+	// Bracket Pair Colorizer
+	"bracketPairColorizer.consecutivePairColors": [ "()", "[]", "{}", [ "$GREEN", "$YELLOW", "$BLUE", "$MAGENTA", "$CYAN" ], "$RED" ],
+	"bracketPairColorizer.forceIterationColorCycle": true,
+	"bracketPairColorizer.scopeLineCSS": [ "borderStyle : none", "backgroundColor: {color}; opacity: .05" ],
+	"bracketPairColorizer.highlightActiveScope": true,
+	"bracketPairColorizer.showBracketsInRuler": true,
+	"bracketPairColorizer.rulerPosition": "Left",
+
+	// Colorize
+	"colorize.hide_current_line_decorations": false
 }
