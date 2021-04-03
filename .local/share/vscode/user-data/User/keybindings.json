@@ -1,4 +1,7 @@
 [
-{ "key": "ctrl+alt+=",            "command": "wwm.aligncode",
-                                     "when": "editorTextFocus && !editorReadonly" },
+{ "key": "ctrl+k n",            "command": "notifications.clearAll" },
+{ "key": "ctrl+k =",            "command": "wwm.aligncode",
+                                   "when": "editorTextFocus && !editorReadonly" },
+{ "key": "ctrl+k ctrl+shift+d", "command": "editor.action.moveSelectionToPreviousFindMatch",
+                                   "when": "editorFocus" },
 ]

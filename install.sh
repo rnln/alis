@@ -115,6 +115,7 @@ FIREFOX_ADDONS=(
 GNOME_EXTENSIONS=(
 	'7/removable-drive-menu'
 	'19/user-themes'
+	'307/dash-to-dock'
 	'517/caffeine'
 	'779/clipboard-indicator'
 	'800/remove-dropdown-arrows'
@@ -592,7 +593,7 @@ function install_base () {
 	SECTOR_SIZE=512
 	SWAP_SECTORS=$((`free -b | awk '/Mem/ {print $2}'` / $SECTOR_SIZE))
 	if [ -d /sys/firmware/efi/efivars ]; then
-		cat <<-EOF | sfdisk $DRIVE
+		cat <<-EOF | sfdisk --force $DRIVE
 			label: gpt
 			sector-size: $SECTOR_SIZE
 			${DRIVE}1: type=C12A7328-F81F-11D2-BA4B-00A0C93EC93B, size=532480
@@ -612,7 +613,7 @@ function install_base () {
 		swapon "$DRIVE"2
 		log -f 'file systems mounting'
 	else
-		cat <<-EOF | sfdisk $DRIVE
+		cat <<-EOF | sfdisk --force $DRIVE
 			label: dos
 			sector-size: $SECTOR_SIZE
 			${DRIVE}1: type=82, size=$SWAP_SECTORS
@@ -639,7 +640,7 @@ function install_base () {
 	pacman -Syy
 	pacstrap /mnt base linux-firmware
 	if [ "$LTS" == true ]; then
-		pacstrap /mnt linux-lts # linux-lts-headers
+		pacstrap /mnt linux-lts linux-lts-headers
 	else
 		pacstrap /mnt linux
 	fi
@@ -668,7 +669,7 @@ function install_base () {
 	ROOT_PASSWORD=$(openssl passwd -crypt ${ROOT_PASSWORD})
 	$CHROOT usermod --password ${ROOT_PASSWORD} root
 	USER_PASSWORD=$(openssl passwd -crypt ${USER_PASSWORD})
-	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password "$USER_PASSWORD" --gid users --groups "$USER_USERNAME",wheel "$USER_USERNAME" # groups += audio,vboxsf
+	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password "$USER_PASSWORD" --gid users --groups wheel "$USER_USERNAME"
 	$CHROOT pacman -S --noconfirm --needed sudo
 	sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
 	log -f 'users configuring'
