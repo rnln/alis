@@ -173,16 +173,10 @@ set -o rm_star_silent
 # set +o warn_create_global
 # set +o warn_nested_var
 
-# XDG Base Directory specification
-# https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-export XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-"$HOME"/.config}
-export XDG_CACHE_HOME=${XDG_CACHE_HOME:-"$HOME"/.cache}
-export XDG_DATA_HOME=${XDG_DATA_HOME:-"$HOME"/.local/share}
+set -a
+source "$ZDOTDIR"/paths.sh
+set +a
 
-typeset -U path
-path=("$HOME"/.local/bin $path[@])
-
-export HISTFILE="$XDG_DATA_HOME"/zsh/history
 export HISTSIZE=100000
 export SAVEHIST=100000
 
@@ -191,34 +185,20 @@ eval "$(dircolors --sh "$ZDOTDIR"/.dircolors)"
 export EDITOR=nvim
 export PAGER=less
 export LESS='-ciJMR +Gg'
-export LESSHISTFILE="$XDG_CACHE_HOME"/lesshist
 # terminfo capabilities to stylize man pages
 export LESS_TERMCAP_md=$(tput setaf 2; tput bold) # start bold (green)
-export LESS_TERMCAP_me=$(tput sgr0)               # end all attributes
 export LESS_TERMCAP_so=$(tput setaf 4; tput smso) # start standout-mode (blue background)
-export LESS_TERMCAP_se=$(tput sgr0)               # end standout-mode
 export LESS_TERMCAP_us=$(tput setaf 4; tput smul) # start underline (blue)
+export LESS_TERMCAP_me=$(tput sgr0)               # end all attributes
+export LESS_TERMCAP_se=$(tput sgr0)               # end standout-mode
 export LESS_TERMCAP_ue=$(tput sgr0)               # end underline
-
-export GNUPGHOME="$XDG_CONFIG_HOME"/gnupg
-
-export VSCODE_PORTABLE="$XDG_DATA_HOME"/vscode
-
-export CARGO_HOME="$XDG_DATA_HOME"/cargo
-# export RUSTUP_HOME="$XDG_DATA_HOME"/rustup
-path=("$CARGO_HOME"/bin $path[@])
-
-export GOPATH="$XDG_DATA_HOME"/go
-path=("$GOPATH"/bin $path[@])
-
-export PYLINTHOME="$XDG_CACHE_HOME"/pylint
 
 source "$ZDOTDIR"/keybindings.sh
 source "$ZDOTDIR"/aliases.sh
 
 if [ -d "$HOME"/filanco ]; then
     export FILANCO_HOME="$HOME"/filanco
-    source "$FILANCO_HOME"/scripts/configs/.zshrc
+    source "$FILANCO_HOME"/.config/.zshrc
 fi
 
 autoload -Uz colors zsh/terminfo
@@ -227,7 +207,6 @@ colors
 export PS2=$'\e[2;34m%_\e[0;34m ❯ \e[0m' # secondary prompt, printed when the shell needs more information to complete a command
 export PS3=$'\e[2;35mselect\e[0;35m ❯ \e[0m' # selection prompt used within a select loop
 export PS4=$'\e[0;36m%N\e[2;36m:%i:%_\e[0;36m ❯ \e[0m' # the execution trace prompt (setopt xtrace)
-export STARSHIP_CACHE="$XDG_CACHE_HOME"/starship
 eval "$(starship init zsh)"
 
 source /usr/share/doc/pkgfile/command-not-found.zsh
@@ -241,22 +220,19 @@ zle_highlight=(
     suffix:bold
 )
 
-# rustup completions zsh >"$XDG_CACHE_HOME"/zsh/rustup
-# fpath+="$XDG_CACHE_HOME"/zsh
-
 zmodload zsh/complist
 autoload -Uz compinit
 [ ! -d "$XDG_CACHE_HOME/zsh" ] && mkdir -p "$XDG_CACHE_HOME"/zsh
 compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-$ZSH_VERSION
 
-zstyle :compinstall filename "$ZDOTDIR"/.zshrc
+zstyle ':compinstall' filename "$ZDOTDIR"/.zshrc
 
 zstyle ':completion:*' menu yes select
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS} # http://linuxshellaccount.blogspot.com/2008/12/color-completion-using-zsh-modules-on.html
 zstyle ':completion:*' verbose yes # http://www.masterzen.fr/2009/04/19/in-love-with-zsh-part-one/
 zstyle ':completion:*' group-name ''
 zstyle ':completion:*' completer _complete _approximate
-zstyle ':completion:*:approximate:*' max-errors 'reply=( $(( ($#PREFIX+$#SUFFIX)/3 )) numeric )' # allow one error per 3 character typed
+zstyle ':completion:*:approximate:*' max-errors 'reply=( $(( ($#PREFIX+$#SUFFIX)/5 )) numeric )' # allow one error per 5 character typed
 zstyle ':completion:*:corrections' format "%F{8}%d (errors: %e)$reset_color"
 zstyle ':completion:*:descriptions' format "%F{8}%d$reset_color"
 zstyle ':completion:*:messages' format "%F{8}%d$reset_color"

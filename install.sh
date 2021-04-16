@@ -119,6 +119,7 @@ GNOME_EXTENSIONS=(
 	'517/caffeine'
 	'779/clipboard-indicator'
 	'800/remove-dropdown-arrows'
+	'906/sound-output-device-chooser'
 	'1010/archlinux-updates-indicator'
 	'1031/topicons'
 	'1112/screenshot-tool'
