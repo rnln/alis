@@ -473,6 +473,8 @@ function update_configuration () {
 			code --install-extension "$extension"
 	# 	fi
 	done
+	rm -rf "$HOME"/.vscode
+	$SUDO sed -i 's;\(.\+"dataFolderName"\).\+;\1: ".local/share/vscode";' /opt/visual-studio-code/resources/app/product.json
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
 	local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
@@ -751,7 +753,7 @@ function install_post () {
 	log -f 'GNOME installation'
 
 	log -s 'zsh installation'
-	install_packages zsh starship-bin
+	install_packages zsh starship
 	sudo sh -c "echo 'export XDG_CONFIG_HOME=\"\$HOME\"/.config' >/etc/zsh/zshenv"
 	sudo sh -c "echo 'export ZDOTDIR=\"\$XDG_CONFIG_HOME\"/zsh' >>/etc/zsh/zshenv"
 	sudo chsh -s `which zsh` `whoami`

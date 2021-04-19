@@ -87,3 +87,6 @@
 
 [web]
 	browser = librewolf
+
+[credential]
+	helper = keepassxc
