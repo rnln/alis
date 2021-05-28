@@ -474,7 +474,7 @@ function update_configuration () {
 	# 	fi
 	done
 	rm -rf "$HOME"/.vscode
-	$SUDO sed -i 's;\(.\+"dataFolderName"\).\+;\1: ".local/share/vscode";' /opt/visual-studio-code/resources/app/product.json
+	$SUDO sed -i 's;\(.\+"dataFolderName"\).\+;\1: ".local/share/vscode",;' /opt/visual-studio-code/resources/app/product.json
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
 
 	local librewolf_home="$XDG_DATA_HOME"/librewolf/librewolf.AppImage.home
