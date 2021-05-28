@@ -80,13 +80,6 @@ function ds () {
 	fi
 }
 
-ssh_options="-F $XDG_CONFIG_HOME/ssh/config"
-alias ssh="ssh $ssh_options"
-alias scp="scp $ssh_options"
-ssh_options='-o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null"'
-alias ssh-insec="ssh $ssh_options"
-alias scp-insec="scp $ssh_options"
-
 alias vim="$EDITOR"
 
 # generate password
