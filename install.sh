@@ -835,8 +835,8 @@ function install_post () {
 		| xargs -0 sed -i 's/\(Up to date\) :)/\1/g'
 
 	export terminal_profile=`uuidgen`
-	envsubst "$COLORS_LIST,\$apps_to_hide,\$terminal_profile" <"$HOME"/.config/dconf/dump.ini | dconf load /
-	rm "$HOME"/.config/dconf/dump.ini
+	envsubst "$COLORS_LIST,\$apps_to_hide,\$terminal_profile" <"$HOME"/dconf-dump.ini | dconf load /
+	rm "$HOME"/dconf-dump.ini
 	log -f 'GNOME configuring'
 
 	if [ "$VBOX" == true ]; then
