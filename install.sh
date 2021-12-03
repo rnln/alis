@@ -3,11 +3,9 @@ set -e
 function help () {
 cat <<EOF >&2
 Run script via curl:
-  sh -c "\$(curl -s https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
+  sh -c "\$(curl -s https://raw.githubusercontent.com/rnln/alis/main/install.sh)"
 or equivalently:
-  sh -c "\$(curl -sL https://v.gd/alisa)"
-or run version from development branch:
-  sh -c "\$(curl -s https://gitlab.com/romanilin/alis/-/raw/dev/install.sh)"
+  sh -c "\$(curl -sL https://v.gd/_alis)"
 
 Supported options:
   -l, --lts            install linux-lts package instead of linux
@@ -412,7 +410,7 @@ function update_configuration () {
 		yum install rsync
 	fi
 	local tempdir=`mktemp -d`
-	git clone https://gitlab.com/romanilin/alis.git "$tempdir"
+	git clone https://github.com/rnln/alis.git "$tempdir"
 	rm -rf "$tempdir"/{.git,install.sh,LICENSE,README.md}
 
 	# GNU Privacy Guard directory
