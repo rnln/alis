@@ -3,11 +3,11 @@
 Run script via `curl`:
 
 ```sh
-sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/rnln/alis/main/install.sh)"
 ```
 or:
 ```sh
-sh -c "$(curl -fsSL https://v.gd/alisa)"
+sh -c "$(curl -fsSL https://v.gd/_alis)"
 ```
 
 Supported arguments:
@@ -22,9 +22,9 @@ Supported arguments:
 
 Full Arch Linux installation example:
 ```sh
-sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)" '' --lts --vbox
+sh -c "$(curl -fsSL https://v.gd/_alis)" '' --lts --vbox
 # reboot
-sh -c "$(curl -fsSL https://gitlab.com/romanilin/alis/-/raw/main/install.sh)" '' --post --xorg
+sh -c "$(curl -fsSL https://v.gd/_alis)" '' --post --xorg
 # and reboot
 ```
 
