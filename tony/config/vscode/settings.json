@@ -1,0 +1,149 @@
+{
+  "terminal.external.osxExec": "iTerm.app",
+
+  // Text rendering
+  "editor.fontFamily": "'JetBrains Mono', 'Noto Sans Mono', 'Menlo', monospace, 'Noto Color Emoji', 'Symbols Nerd Font', 'MesloLGL Nerd Font Mono'",
+  // "editor.fontLigatures": true,
+  "editor.lineHeight": 19,
+  "editor.renderWhitespace": "boundary",
+  "terminal.integrated.drawBoldTextInBrightColors": false,
+  "terminal.integrated.lineHeight": 1.15,
+  // "terminal.integrated.defaultProfile.windows": "Ubuntu (WSL)",
+  "terminal.integrated.minimumContrastRatio": 7,
+  "terminal.integrated.scrollback": 10000,
+
+  // UI
+  "breadcrumbs.enabled": false,
+  "editor.find.cursorMoveOnType": false,
+  "editor.minimap.enabled": false,
+  "editor.renderLineHighlight": "all",
+  "editor.rulers": [80, 120],
+  "editor.showFoldingControls": "always",
+  "terminal.integrated.defaultLocation": "editor",
+  "window.menuBarVisibility": "toggle",
+  "workbench.editor.untitled.hint": "hidden",
+  "workbench.settings.editor": "json",
+  "workbench.startupEditor": "none",
+  "workbench.tree.indent": 14,
+  "workbench.tree.renderIndentGuides": "always",
+
+  "html.format.wrapLineLength": 1200,
+
+  // Coloring
+  "workbench.colorCustomizations": { "[Default Dark+]": {
+    "editor.background":              "#121212",
+    "terminal.background":            "#121212",
+    "editor.foreground":              "#ffffff",
+    "terminal.foreground":            "#ffffff",
+    "editorSuggestWidget.foreground": "#ffffff",
+    "terminal.ansiBlack":             "#121212", "terminal.ansiBrightBlack":   "#8e8e8e",
+    "terminal.ansiRed":               "#ff0000", "terminal.ansiBrightRed":     "#ff693a",
+    "terminal.ansiGreen":             "#00c946", "terminal.ansiBrightGreen":   "#00ff81",
+    "terminal.ansiYellow":            "#92ab00", "terminal.ansiBrightYellow":  "#d5e800",
+    "terminal.ansiBlue":              "#009cff", "terminal.ansiBrightBlue":    "#00d8ff",
+    "terminal.ansiMagenta":           "#ff00f2", "terminal.ansiBrightMagenta": "#ff00ff",
+    "terminal.ansiCyan":              "#00caff", "terminal.ansiBrightCyan":    "#00ffff",
+    "terminal.ansiWhite":             "#c0c0c0", "terminal.ansiBrightWhite":   "#ffffff",
+    "editor.selectionBackground":     "#3298ff66",
+    "terminal.selectionBackground":   "#3298ff66",
+
+    "editorRuler.foreground": "#ffffff22" // test
+  }},
+  "editor.tokenColorCustomizations": { "[Default Dark+]": {
+    "textMateRules": [
+      { "scope": "comment", "settings": { "foreground": "#ffffff7c", "fontStyle": "italic" }}
+    ]
+  }},
+
+  // Online services (@tag:usesOnlineServices)
+  "extensions.ignoreRecommendations": true,
+  "git.autofetch": "all",
+  "telemetry.telemetryLevel": "off",
+  "update.mode": "manual",
+  "workbench.enableExperiments": false,
+  "workbench.settings.enableNaturalLanguageSearch": false,
+
+  // Tabulation
+  "editor.insertSpaces": false, "editor.tabSize": 4,
+  "[css]":        { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[html]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[javascript]": { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[json]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[jsonc]":      { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[scss]":       { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[typescript]": { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "[python]":     { "editor.insertSpaces": true },
+  "[rust]":       { "editor.insertSpaces": true },
+
+  // Editor associations
+  "workbench.editorAssociations": {
+    "*.bin": "hexEditor.hexedit",
+    "*.dll": "hexEditor.hexedit",
+    "*.exe": "hexEditor.hexedit",
+    "*.hex": "hexEditor.hexedit",
+    "*.ipynb": "jupyter-notebook"
+  },
+
+  // Misc
+  "editor.suggestSelection": "recentlyUsedByPrefix",
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.idea": true,
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/.DS_Store": true,
+    "**/.git": true,
+    "**/.idea": true,
+    "**/*.code-search": true,
+    "**/bower_components": true,
+    "**/node_modules": true,
+  },
+  "files.restoreUndoStack": true,
+  "security.workspace.trust.enabled": false,
+
+  // * Extensions
+  // Python
+  "python.linting.enabled": true,
+  "python.linting.pylintEnabled": true,
+  "python.pythonPath": "/usr/bin/python",
+
+  // Better Align
+  "alignment.indentBase": "activeline",
+
+  // Better Comments
+  "better-comments.tags": [
+    { "tag": "*",    "color": "#ffffff7c", "bold": true },
+    { "tag": "//",   "color": "#ffffff3c" },
+    { "tag": "!",    "color": "#ff693a7c" },
+    { "tag": "?",    "color": "#00ff817c" },
+    { "tag": "todo", "color": "#d5e8007c" }
+  ],
+
+  // Colorize
+  "colorize.hide_current_line_decorations": false,
+
+  // Material Icon Theme
+  "workbench.iconTheme": "material-icon-theme",
+  "material-icon-theme.hidesExplorerArrows": true,
+  
+  // GitLens
+  "gitlens.remotes": [
+    { "domain": "git.tony", "type": "GitLab" }
+  ],
+
+  // Import Cost
+  "importCost.smallPackageColor": "#00ff813c",
+  "importCost.mediumPackageColor": "#d5e8003c",
+  "importCost.largePackageColor": "#ff693a3c",
+
+  "redhat.telemetry.enabled": false,
+  "jupyter.askForKernelRestart": false,
+  "notebook.lineNumbers": "on",
+  "editor.guides.bracketPairs": true,
+  "git.statusLimit": 100,
+  "files.autoSaveDelay": 1000
+}
