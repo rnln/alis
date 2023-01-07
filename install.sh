@@ -54,7 +54,6 @@ GNOME_PACKAGES=(
 	'gnome-control-center'
 	'nautilus'
 	'gnome-themes-extra'
-	'chrome-gnome-shell'
 	'gnome-tweaks'
 	'eog'
 )
@@ -671,7 +670,7 @@ function install_base () {
 	USER_PASSWORD=$(openssl passwd -6 ${USER_PASSWORD})
 	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password "$USER_PASSWORD" --gid users --groups wheel "$USER_USERNAME"
 	$CHROOT pacman -S --noconfirm --needed sudo
-	sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
+	sed -i 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /mnt/etc/sudoers
 	log -f 'users configuring'
 
 	if [ "$VBOX" == true ]; then
@@ -867,6 +866,6 @@ else
 	check_system_errors
 	if ask 'Reboot now'; then
 		revert_sudoers
-		reboot
+		reboot now
 	fi
 fi
