@@ -139,24 +139,6 @@ APPS_TO_SHOW=(
 )
 APPS_TO_SHOW=`printf '\|%s' "${APPS_TO_SHOW[@]}" | cut -c 3-`
 
-# https://marketplace.visualstudio.com/items?itemName={extension}
-VSCODE_EXTENSIONS=(
-	'aaron-bond.better-comments'
-	'albymor.increment-selection'
-	'christian-kohler.path-intellisense'
-	'esbenp.prettier-vscode'
-	'firefox-devtools.vscode-firefox-debug'
-	'kamikillerto.vscode-colorize'
-	'ms-python.python'
-	'ms-vscode-remote.remote-ssh'
-	'ms-vscode.js-debug'
-	'ritwickdey.LiveServer'
-	'wix.vscode-import-cost'
-	'Chouzz.vscode-better-align'
-	'xabikos.JavaScriptSnippets'
-	'yzhang.markdown-all-in-one'
-)
-
 function setup_color_scheme () {
 	export BLACK='#121212'
 	export RED='#ff714f'
@@ -463,11 +445,6 @@ function update_configuration () {
 	rsync -a {"$tempdir"/.local/share,"$XDG_DATA_HOME"}/vscode/user-data/User/
 	envsubst "$COLORS_LIST" <"$tempdir"/.local/share/vscode/user-data/User/settings.json >"$XDG_DATA_HOME"/vscode/user-data/User/settings.json
 	# local installed_extensions=\|`code --list-extensions | tr '\n' '\|'`
-	for extension in "${VSCODE_EXTENSIONS[@]}"; do
-	# 	if ! grep -q "\|$extension\|" <<<"$installed_extensions"; then
-			code --install-extension "$extension"
-	# 	fi
-	done
 	rm -rf "$HOME"/.vscode
 	$SUDO sed -i 's;\(.\+"dataFolderName"\).\+;\1: ".local/share/vscode",;' /opt/visual-studio-code/resources/app/product.json
 	rm -rf "$tempdir"/.local/share/vscode/user-data/User
