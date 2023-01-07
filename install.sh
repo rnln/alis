@@ -667,9 +667,9 @@ function install_base () {
 	log -f 'network configuring'
 
 	log -s 'users configuring'
-	ROOT_PASSWORD=$(openssl passwd -crypt ${ROOT_PASSWORD})
+	ROOT_PASSWORD=$(openssl passwd -6 ${ROOT_PASSWORD})
 	$CHROOT usermod --password ${ROOT_PASSWORD} root
-	USER_PASSWORD=$(openssl passwd -crypt ${USER_PASSWORD})
+	USER_PASSWORD=$(openssl passwd -6 ${USER_PASSWORD})
 	$CHROOT useradd --create-home --comment "$USER_FULLNAME" --password "$USER_PASSWORD" --gid users --groups wheel "$USER_USERNAME"
 	$CHROOT pacman -S --noconfirm --needed sudo
 	sed -i 's/^# \(%wheel ALL=(ALL) ALL\)/\1/' /mnt/etc/sudoers
